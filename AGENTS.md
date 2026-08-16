@@ -1,8 +1,8 @@
 AGENTS.md
 
-Project: Decksmith
+Project: Deckworks
 
-Decksmith is an open-source, agent-native presentation workspace for Claude Code, OpenCode, Codex, and other MCP-compatible coding agents.
+Deckworks is an open-source, agent-native presentation workspace for Claude Code, OpenCode, Codex, and other MCP-compatible coding agents.
 
 The core product is a local-first system that lets an agent:
 
@@ -86,7 +86,7 @@ Codex
    MCP
     │
     ▼
-Decksmith Application Core
+Deckworks Application Core
     │
     ├── Skill Loader
     ├── Presentation Service
@@ -240,11 +240,11 @@ The exact names can change during implementation if there is a compelling reason
 
 5. MCP initialization
 
-When an agent connects to Decksmith, the server should establish project context.
+When an agent connects to Deckworks, the server should establish project context.
 
 The initialization workflow should:
 
-Find the Decksmith project.
+Find the Deckworks project.
 
 Determine the canonical presentation file.
 
@@ -380,7 +380,7 @@ Example response:
 
 The CLI equivalent:
 
-decksmith preview
+deckworks preview
 
 should open the browser when possible.
 
@@ -460,36 +460,36 @@ The CLI must call the same application services as MCP.
 
 Required commands:
 
-decksmith init
-decksmith new
-decksmith open
-decksmith status
+deckworks init
+deckworks new
+deckworks open
+deckworks status
 
-decksmith skill list
-decksmith skill load <skill>
+deckworks skill list
+deckworks skill load <skill>
 
-decksmith change
-decksmith save
-decksmith preview
-decksmith review
+deckworks change
+deckworks save
+deckworks preview
+deckworks review
 
-decksmith export html
-decksmith export pdf
-decksmith export pptx
+deckworks export html
+deckworks export pdf
+deckworks export pptx
 
-decksmith comment
-decksmith comments
+deckworks comment
+deckworks comments
 
 Convenience aliases may be added:
 
-decksmith pdf
-decksmith pptx
+deckworks pdf
+deckworks pptx
 
 but the explicit commands remain canonical.
 
 12. TUI template selection
 
-decksmith new should provide a TUI for choosing a template.
+deckworks new should provide a TUI for choosing a template.
 
 Example:
 
@@ -559,7 +559,7 @@ React
 
 TypeScript
 
-Vite
+Bun bundler (HTML imports)
 
 CSS
 
@@ -875,21 +875,21 @@ skill discovery
 
 TUI
 
-decksmith new
+deckworks new
 
 template selection
 
-decksmith change
+deckworks change
 
-decksmith save
+deckworks save
 
-decksmith preview
+deckworks preview
 
 Acceptance test
 
 A human can:
 
-decksmith new
+deckworks new
 → choose template
 → create deck
 → change content
@@ -955,9 +955,9 @@ PNG
 
 Required commands:
 
-decksmith export html
-decksmith export pdf
-decksmith export pptx
+deckworks export html
+deckworks export pdf
+deckworks export pptx
 
 Acceptance test
 
@@ -993,14 +993,14 @@ Language:
   TypeScript
 
 Runtime:
-  Node.js
+  Bun
 
 Agent protocol:
   MCP TypeScript SDK
 
 Frontend:
   React
-  Vite
+  Bun bundler (HTML imports)
   CSS
   SVG
   shadcn/ui
@@ -1020,7 +1020,7 @@ Persistence:
   Filesystem
 
 Testing:
-  Vitest
+  Bun test
   Playwright
 
 CLI/TUI:
@@ -1032,7 +1032,7 @@ Avoid adding unnecessary dependencies.
 
 Recommended starting structure:
 
-decksmith/
+deckworks/
 ├── apps/
 │   ├── web/
 │   └── cli/
@@ -1171,7 +1171,7 @@ Agent can add/remove/reorder slides.
 
 Presentation state persists to files.
 
-decksmith new provides template selection.
+deckworks new provides template selection.
 
 CLI can change presentation content.
 
@@ -1201,5 +1201,5 @@ The complete agent feedback loop works.
 
 The most important acceptance test is:
 
-An external coding agent can create, modify, save, preview, review, and export a presentation through Decksmith without manually editing the underlying presentation file.
+An external coding agent can create, modify, save, preview, review, and export a presentation through Deckworks without manually editing the underlying presentation file.
 

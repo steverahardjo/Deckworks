@@ -1,30 +1,8 @@
-# bun-react-template
-
-To install dependencies:
-
-```bash
-bun install
-```
-
-To start a development server:
-
-```bash
-bun dev
-```
-
-To run for production:
-
-```bash
-bun start
-```
-
-This project was created using `bun init` in bun v1.3.10. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
-
-Decksmith
+# Deckworks
 
 Agent-native presentation creation, editing, preview, and export.
 
-Decksmith is an open-source presentation workspace built for coding agents such as Claude Code, OpenCode, and Codex.
+Deckworks is an open-source presentation workspace built for coding agents such as Claude Code, OpenCode, and Codex.
 
 It combines:
 
@@ -52,7 +30,7 @@ Agent
   ↓
 MCP
   ↓
-Decksmith Core
+Deckworks Core
   ↓
 Presentation State
   ↓
@@ -65,7 +43,7 @@ Human feedback
 Agent changes
   ↺
 
-Decksmith is not intended to be a thin "LLM → PowerPoint" wrapper. The presentation state is the source of truth; PPTX and PDF are output formats.
+Deckworks is not intended to be a thin "LLM → PowerPoint" wrapper. The presentation state is the source of truth; PPTX and PDF are output formats.
 
 Status
 
@@ -91,7 +69,7 @@ Core concepts
 
 1. Presentation as structured state
 
-A Decksmith presentation is represented by structured state rather than a .pptx file.
+A Deckworks presentation is represented by structured state rather than a .pptx file.
 
 Conceptually:
 
@@ -129,7 +107,7 @@ instead of regenerating an entire slide.
 
 2. Agent-first workflow
 
-Decksmith exposes an opinionated lifecycle:
+Deckworks exposes an opinionated lifecycle:
 
 initialize
     ↓
@@ -196,7 +174,7 @@ The exact tool schema may evolve, but the conceptual workflow should remain stab
 
 Skills
 
-Decksmith includes skills that teach coding agents how to use the system.
+Deckworks includes skills that teach coding agents how to use the system.
 
 Recommended structure:
 
@@ -216,7 +194,7 @@ Setup
 
 The setup skill teaches an agent to:
 
-Inspect the current Decksmith project.
+Inspect the current Deckworks project.
 
 Determine whether a presentation exists.
 
@@ -318,7 +296,7 @@ The CLI provides a human-facing interface to the same core application services 
 
 Create a presentation
 
-decksmith new
+deckworks new
 
 The TUI allows the user to choose a template.
 
@@ -366,33 +344,33 @@ CLI workflow
 
 Initialize
 
-decksmith init
+deckworks init
 
 Create
 
-decksmith new
+deckworks new
 
 Inspect
 
-decksmith status
-decksmith open
+deckworks status
+deckworks open
 
 Load skills
 
-decksmith skill list
-decksmith skill load create
-decksmith skill load edit
+deckworks skill list
+deckworks skill load create
+deckworks skill load edit
 
 Change content
 
-decksmith change \
+deckworks change \
   --slide 4 \
   --target title \
   --text "Revenue is accelerating"
 
 Or:
 
-decksmith change \
+deckworks change \
   --slide 4 \
   --target revenue-chart \
   --width 600
@@ -401,7 +379,7 @@ The same underlying change service must be available to MCP.
 
 Save
 
-decksmith save
+deckworks save
 
 save means saving the canonical presentation state.
 
@@ -409,13 +387,13 @@ It does not automatically mean exporting every format.
 
 Preview
 
-decksmith preview
+deckworks preview
 
 The command starts or connects to a local preview server and opens the presentation in a browser.
 
 Example:
 
-Decksmith preview
+Deckworks preview
 
 Local: http://localhost:4173
 Slides: 12
@@ -423,21 +401,21 @@ Template: Consulting
 
 Review
 
-decksmith review
+deckworks review
 
 The review system should inspect rendered slides and report obvious problems.
 
 Export
 
-decksmith export html
-decksmith export pdf
-decksmith export pptx
+deckworks export html
+deckworks export pdf
+deckworks export pptx
 
 Modern PowerPoint output should use .pptx, not the legacy .ppt format.
 
 Project files
 
-A Decksmith project should be self-contained and portable.
+A Deckworks project should be self-contained and portable.
 
 Example:
 
@@ -501,7 +479,7 @@ Components must have stable IDs and deterministic rendering.
 
 Charts
 
-Decksmith uses Recharts for its initial chart system.
+Deckworks uses Recharts for its initial chart system.
 
 Supported chart primitives should include:
 
@@ -620,7 +598,7 @@ Repository architecture
 
 A possible repository structure:
 
-decksmith/
+deckworks/
 ├── apps/
 │   ├── web/
 │   └── cli/
@@ -663,13 +641,13 @@ Initial stack:
 
 TypeScript
 
-Node.js
+Bun
 
 MCP TypeScript SDK
 
 React
 
-Vite
+Bun bundler (HTML imports)
 
 CSS
 
@@ -687,7 +665,7 @@ PptxGenJS
 
 JSON/filesystem persistence
 
-Vitest
+Bun test
 
 TUI library appropriate for the chosen CLI architecture
 
@@ -741,7 +719,7 @@ agent workflow documentation
 
 Acceptance test:
 
-An agent can understand how to use Decksmith without being manually instructed about every MCP tool.
+An agent can understand how to use Deckworks without being manually instructed about every MCP tool.
 
 Phase 3 — Frontend
 
@@ -849,7 +827,7 @@ Postgres
 
 complex distributed infrastructure
 
-Decksmith should first prove the local agent-native workflow.
+Deckworks should first prove the local agent-native workflow.
 
 The MVP success criterion
 
@@ -860,7 +838,7 @@ User:
 Use the Consulting template. Include several charts."
 
 Agent:
-→ loads Decksmith skill
+→ loads Deckworks skill
 → creates presentation
 → adds slides
 → adds Recharts visualizations
@@ -884,4 +862,4 @@ Agent:
 → previews
 → reviews
 
-If this workflow works reliably, Decksmith is solving the right problem.
+If this workflow works reliably, Deckworks is solving the right problem.
