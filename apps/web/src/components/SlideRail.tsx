@@ -1,0 +1,101 @@
+import { Plus } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { useAppDispatch, useAppState } from "@/state/store";
+
+const SLIDE_RATIO = 16 / 9;
+
+export function SlideRail() {
+  const { presentation, activeSlideId } = useAppState();
+  const dispatch = useAppDispatch();
+
+  return (
+    <aside className="flex w-44 shrink-0 flex-col border-r">
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <span className="text-xs font-medium text-muted-foreground">
+          Slides
+        </span>
+        <Button variant="ghost" size="icon" className="size-6" aria-label="Add slide">
+          <Plus className="size-4" />
+        </Button>
+      </div>
+
+      <ScrollArea className="flex-1">
+        <div className="flex flex-col gap-3 px-3 py-3">
+          {presentation.slides.map((slide, i) => {
+            const isActive = slide.id === activeSlideId;
+            return (
+              <button
+                key={slide.id}
+                onClick={() =>
+                  dispatch({ type: "select-slide", slideId: slide.id })
+                }
+                className={cn(
+                  "group flex flex-col gap-1 rounded-md border p-1.5 text-left transition-colors",
+                  isActive
+                    ? "border-ring bg-accent"
+                    : "border-transparent hover:border-input hover:bg-muted"
+                )}
+              >
+                <div
+                  className="w-full overflow-hidden rounded-sm"
+                  style={{ aspectRatio: SLIDE_RATIO, background: presentation.theme.background }}
+                >
+                  <MiniSlide slide={slide} />
+                </div>
+                <span className="px-0.5 text-[11px] text-muted-foreground">
+                  {i + 1}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </ScrollArea>
+    </aside>
+  );
+}
+
+function MiniSlide({ slide }: { slide: { elements: { id: string; type: string; properties: Record<string, unknown> }[] } }) {
+  return (
+    <div className="flex h-full flex-col justify-center gap-0.5 p-1.5">
+      {slide.elements.map((el) => {
+        if (el.type === "title") {
+          return (
+            <div
+              key={el.id}
+              className="h-1.5 w-3/4 rounded-sm bg-current opacity-60"
+              style={{ color: "currentColor" }}
+            />
+          );
+        }
+        if (el.type === "subtitle") {
+          return (
+            <div
+              key={el.id}
+              className="h-1 w-1/2 rounded-sm bg-current opacity-30"
+            />
+          );
+        }
+        if (el.type === "body") {
+          return (
+            <div
+              key={el.id}
+              className="h-1 w-2/3 rounded-sm bg-current opacity-30"
+            />
+          );
+        }
+        if (el.type === "chart") {
+          return (
+            <div
+              key={el.id}
+              className="h-4 w-4/5 rounded-sm border border-current opacity-30"
+            />
+          );
+        }
+        return null;
+      })}
+    </div>
+  );
+}
