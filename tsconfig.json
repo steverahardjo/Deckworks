@@ -23,7 +23,9 @@
 
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./apps/web/src/*"]
+      "@/*": ["./apps/web/src/*"],
+      "@deckworks/core": ["./packages/core/src/index.ts"],
+      "@deckworks/core/store": ["./packages/core/src/store.ts"]
     },
 
     // Some stricter flags (disabled by default)

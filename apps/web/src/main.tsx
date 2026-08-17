@@ -1,4 +1,3 @@
-import "@fontsource-variable/plus-jakarta-sans";
 import "@fontsource-variable/source-sans-3";
 
 import { StrictMode } from "react";

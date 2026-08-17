@@ -10,7 +10,7 @@ import { Feather, X, Send, ImagePlus, Link2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppState } from "@/state/store";
-import type { Comment, Slide } from "@/types/presentation";
+import type { Comment, Slide } from "@deckworks/core";
 
 const DRAG_THRESHOLD = 4;
 

@@ -1,50 +1,7 @@
-import type { Presentation, Preset } from "@/types/presentation";
+import { presets } from "@deckworks/core";
+import type { Presentation } from "@deckworks/core";
 
-const themes = {
-  minimal: {
-    id: "minimal",
-    name: "Minimal",
-    background: "#fafafa",
-    foreground: "#18181b",
-    accent: "#18181b",
-    muted: "#71717a",
-    font: '"Source Sans 3 Variable", "Segoe UI", system-ui, sans-serif',
-  },
-  consulting: {
-    id: "consulting",
-    name: "Consulting",
-    background: "#ffffff",
-    foreground: "#0f172a",
-    accent: "#2563eb",
-    muted: "#64748b",
-    font: '"Source Sans 3 Variable", "Segoe UI", system-ui, sans-serif',
-  },
-  corporate: {
-    id: "corporate",
-    name: "Corporate",
-    background: "#ffffff",
-    foreground: "#1e293b",
-    accent: "#0f766e",
-    muted: "#64748b",
-    font: '"Source Sans 3 Variable", "Segoe UI", system-ui, sans-serif',
-  },
-  dark: {
-    id: "dark",
-    name: "Dark",
-    background: "#0b0f1a",
-    foreground: "#e5e7eb",
-    accent: "#8b5cf6",
-    muted: "#94a3b8",
-    font: '"Source Sans 3 Variable", "Segoe UI", system-ui, sans-serif',
-  },
-} as const;
-
-export const presets: Preset[] = [
-  { id: "minimal", name: "Minimal", theme: themes.minimal },
-  { id: "consulting", name: "Consulting", theme: themes.consulting },
-  { id: "corporate", name: "Corporate", theme: themes.corporate },
-  { id: "dark", name: "Dark", theme: themes.dark },
-];
+const consultingTheme = presets.find((p) => p.id === "consulting")!.theme;
 
 export const mockPresentation: Presentation = {
   metadata: {
@@ -54,7 +11,7 @@ export const mockPresentation: Presentation = {
     updatedAt: "2026-08-16T00:00:00.000Z",
   },
   dimensions: { width: 1280, height: 720 },
-  theme: themes.consulting,
+  theme: consultingTheme,
   template: "consulting",
   slides: [
     {

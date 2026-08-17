@@ -33,9 +33,9 @@ export function SlideRail() {
                   dispatch({ type: "select-slide", slideId: slide.id })
                 }
                 className={cn(
-                  "group flex flex-col gap-1 rounded-md border p-1.5 text-left transition-colors",
+                  "group flex flex-col gap-1 rounded-md border p-1.5 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]",
                   isActive
-                    ? "border-ring bg-accent"
+                    ? "border-ring/60 bg-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
                     : "border-transparent hover:border-input hover:bg-muted"
                 )}
               >

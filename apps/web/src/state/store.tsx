@@ -6,8 +6,9 @@ import {
   type ReactNode,
 } from "react";
 
-import type { Comment, Presentation, Preset, Slide } from "@/types/presentation";
-import { mockPresentation, presets as presetList } from "./mockPresentation";
+import type { Comment, Presentation, Preset, Slide } from "@deckworks/core";
+import { presets as presetList } from "@deckworks/core";
+import { mockPresentation } from "./mockPresentation";
 
 export type State = {
   presentation: Presentation;

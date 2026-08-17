@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useAppState } from "@/state/store";
-import type { Element, Slide } from "@/types/presentation";
+import type { Element, Slide } from "@deckworks/core";
 import { ShadowBoundary } from "./ShadowBoundary";
 import { CommentBar, type CommentBarHandle } from "./CommentBar";
 
@@ -26,7 +26,7 @@ export function Slides() {
   return (
     <main className="relative flex flex-1 items-center justify-center overflow-hidden bg-background p-6">
       <div
-        className="relative max-h-full max-w-full shadow-2xl"
+        className="relative max-h-full max-w-full shadow-[0_24px_70px_-24px_rgba(0,0,0,0.55)]"
         style={{
           aspectRatio: `${presentation.dimensions.width} / ${presentation.dimensions.height}`,
           height: "min(100%, calc((100vw - 22rem) * 9 / 16))",

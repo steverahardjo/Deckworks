@@ -3,15 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "bun --hot apps/web/index.ts",
     "build": "bun run apps/web/build.ts",
-    "start": "NODE_ENV=production bun apps/web/index.ts"
+    "start": "NODE_ENV=production bun apps/web/index.ts",
+    "mcp": "bun packages/mcp/src/index.ts"
   },
   "dependencies": {
+    "@deckworks/core": "workspace:*",
     "@fontsource-variable/plus-jakarta-sans": "^5.3.0",
     "@fontsource-variable/source-sans-3": "^5.3.0",
-    "@modelcontextprotocol/server": "^2.0.0",
     "@radix-ui/react-dropdown-menu": "^2.1.24",
     "@radix-ui/react-scroll-area": "^1.2.18",
     "@radix-ui/react-separator": "^1.1.15",
