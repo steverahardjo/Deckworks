@@ -1,13 +1,27 @@
+import { useRef } from "react";
 import { useAppState } from "@/state/store";
 import type { Element, Slide } from "@/types/presentation";
 import { ShadowBoundary } from "./ShadowBoundary";
-import { CommentBar } from "./CommentBar";
+import { CommentBar, type CommentBarHandle } from "./CommentBar";
 
 export function Slides() {
   const { presentation, activeSlideId } = useAppState();
   const slide =
     presentation.slides.find((s) => s.id === activeSlideId) ??
     presentation.slides[0];
+
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const commentRef = useRef<CommentBarHandle>(null);
+
+  const handleSlideDoubleClick = (e: React.MouseEvent) => {
+    const surface = surfaceRef.current;
+    if (!surface) return;
+    const rect = surface.getBoundingClientRect();
+    commentRef.current?.openAt({
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top,
+    });
+  };
 
   return (
     <main className="relative flex flex-1 items-center justify-center overflow-hidden bg-background p-6">
@@ -19,6 +33,8 @@ export function Slides() {
         }}
       >
         <div
+          ref={surfaceRef}
+          onDoubleClick={handleSlideDoubleClick}
           className="absolute inset-0 overflow-hidden rounded-sm"
           style={{ background: presentation.theme.background }}
         >
@@ -27,7 +43,7 @@ export function Slides() {
           </ShadowBoundary>
         </div>
 
-        {slide ? <CommentBar slide={slide} /> : null}
+        {slide ? <CommentBar ref={commentRef} slide={slide} /> : null}
       </div>
     </main>
   );

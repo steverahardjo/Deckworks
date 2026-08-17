@@ -56,6 +56,8 @@ export interface Comment {
   elementId?: string;
   message: string;
   status: "open" | "resolved";
+  imageUrl?: string;
+  link?: string;
 }
 
 export interface PresentationMetadata {
