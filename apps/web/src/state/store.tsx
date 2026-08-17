@@ -9,11 +9,18 @@ import {
 import type { Comment, Presentation, Preset, Slide } from "@deckworks/core";
 import { presets as presetList } from "@deckworks/core";
 import { mockPresentation } from "./mockPresentation";
+import type { Material } from "./types";
+
+export type View = "start" | "editor";
 
 export type State = {
   presentation: Presentation;
   activeSlideId: string;
   presets: Preset[];
+  view: View;
+  materials: Material[];
+  selectedLook: string;
+  focus: string;
 };
 
 export type Action =
@@ -22,7 +29,12 @@ export type Action =
   | { type: "apply-preset"; presetId: string }
   | { type: "add-comment"; comment: Comment }
   | { type: "add-slide"; slide: Slide }
-  | { type: "compile" };
+  | { type: "compile" }
+  | { type: "add-material"; material: Material }
+  | { type: "remove-material"; id: string }
+  | { type: "select-look"; presetId: string }
+  | { type: "set-focus"; focus: string }
+  | { type: "build" };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -77,6 +89,27 @@ function reducer(state: State, action: Action): State {
         },
       };
     }
+    case "add-material":
+      return { ...state, materials: [...state.materials, action.material] };
+    case "remove-material":
+      return {
+        ...state,
+        materials: state.materials.filter((m) => m.id !== action.id),
+      };
+    case "select-look":
+      return { ...state, selectedLook: action.presetId };
+    case "set-focus":
+      return { ...state, focus: action.focus };
+    case "build": {
+      const preset = presetList.find((p) => p.id === state.selectedLook);
+      return {
+        ...state,
+        view: "editor",
+        presentation: preset
+          ? { ...state.presentation, theme: preset.theme, template: preset.id }
+          : state.presentation,
+      };
+    }
   }
 }
 
@@ -84,6 +117,10 @@ const initialState: State = {
   presentation: mockPresentation,
   activeSlideId: mockPresentation.slides[0]?.id ?? "slide-01",
   presets: presetList,
+  view: "start",
+  materials: [],
+  selectedLook: "consulting",
+  focus: "",
 };
 
 const StateContext = createContext<State | null>(null);

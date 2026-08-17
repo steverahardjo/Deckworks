@@ -1,6 +1,6 @@
 import type { Preset, Theme } from "./types.js";
 
-const font = '"Source Sans 3 Variable", "Segoe UI", system-ui, sans-serif';
+const font = '"Anthropic Sans Text", "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
 
 export const themes = {
   minimal: {
@@ -39,6 +39,69 @@ export const themes = {
     muted: "#94a3b8",
     font,
   },
+  editorial: {
+    id: "editorial",
+    name: "Editorial",
+    background: "#f7f3ec",
+    foreground: "#1c1917",
+    accent: "#8a5a2b",
+    muted: "#78716c",
+    font,
+  },
+  academic: {
+    id: "academic",
+    name: "Academic",
+    background: "#ffffff",
+    foreground: "#0f1e3d",
+    accent: "#1d4ed8",
+    muted: "#64748b",
+    font,
+  },
+  startup: {
+    id: "startup",
+    name: "Startup",
+    background: "#0b1220",
+    foreground: "#e6edf7",
+    accent: "#14b8a6",
+    muted: "#8aa0b8",
+    font,
+  },
+  mckinsey: {
+    id: "mckinsey",
+    name: "M&k&ns*y",
+    background: "#ffffff",
+    foreground: "#051c2c",
+    accent: "#2251ff",
+    muted: "#4e5b66",
+    font,
+  },
+  deloitte: {
+    id: "deloitte",
+    name: "D&lo*tt&",
+    background: "#ffffff",
+    foreground: "#000000",
+    accent: "#86bc25",
+    muted: "#53565a",
+    font,
+  },
+  c4e: {
+    id: "c4e",
+    name: "C4e",
+    background: "#ffffff",
+    foreground: "#0b0b0b",
+    accent: "#0000dc",
+    muted: "#5a5a5a",
+    font,
+  },
+  travel: {
+    id: "travel",
+    name: "Travel",
+    background: "#f5f7ee",
+    foreground: "#1e3a2f",
+    accent: "#43a047",
+    muted: "#5c6f62",
+    font,
+  },
 } satisfies Record<string, Theme>;
 
 export const presets: Preset[] = [
@@ -46,4 +109,11 @@ export const presets: Preset[] = [
   { id: "consulting", name: "Consulting", theme: themes.consulting },
   { id: "corporate", name: "Corporate", theme: themes.corporate },
   { id: "dark", name: "Dark", theme: themes.dark },
+  { id: "editorial", name: "Editorial", theme: themes.editorial },
+  { id: "academic", name: "Academic", theme: themes.academic },
+  { id: "startup", name: "Startup", theme: themes.startup },
+  { id: "mckinsey", name: "M&k&ns*y", theme: themes.mckinsey },
+  { id: "deloitte", name: "D&lo*tt&", theme: themes.deloitte },
+  { id: "c4e", name: "C4e", theme: themes.c4e },
+  { id: "travel", name: "Travel", theme: themes.travel },
 ];
