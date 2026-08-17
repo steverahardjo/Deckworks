@@ -1,6 +1,7 @@
-import { FileText, FileType, FileDown, Presentation } from "lucide-react";
+import { FileDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { FileTypeIcon } from "./FileTypeIcon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,15 +24,15 @@ export function ExportMenu() {
         <DropdownMenuLabel>Export deck</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => {}}>
-          <FileType className="size-4" />
+          <FileTypeIcon format="PDF" />
           PDF
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => {}}>
-          <Presentation className="size-4" />
+          <FileTypeIcon format="PPTX" />
           PPTX
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={() => {}}>
-          <FileText className="size-4" />
+          <FileTypeIcon format="HTML" />
           HTML
         </DropdownMenuItem>
       </DropdownMenuContent>
