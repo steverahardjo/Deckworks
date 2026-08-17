@@ -1,0 +1,174 @@
+# Deckworks — Deck JSON reference
+
+The presentation state is a single JSON document (`deck.json`). It is the
+**source of truth**; PPTX/PDF/HTML are output formats, not the canonical state.
+Every editable object has a stable `id` so agents can target it directly.
+
+This document is the machine-readable reference for the JSON method. Types are
+defined once in `packages/core/src/types.ts` and shared by the frontend, the
+MCP server, and any future CLI.
+
+## File layout
+
+```
+my-deck/
+  deck.json          # canonical Presentation state (single source of truth)
+```
+
+`packages/core/src/store.ts` (`DeckworksApp`) reads/writes this file via
+`deck_init`, `deck_new`, `deck_open`, and `deck_save`.
+
+## Top-level shape
+
+```jsonc
+{
+  "metadata":   PresentationMetadata,
+  "dimensions": Dimensions,
+  "theme":      Theme,
+  "template":   string,        // preset id of the active theme
+  "slides":     Slide[],
+  "comments":   Comment[]
+}
+```
+
+## Field reference
+
+### `metadata` (PresentationMetadata)
+
+| Field       | Type   | Notes                          |
+| ----------- | ------ | ------------------------------ |
+| `title`     | string | Display name of the deck.      |
+| `author`    | string | `"deckworks"` by default.      |
+| `createdAt` | string | ISO-8601 timestamp.            |
+| `updatedAt` | string | ISO-8601 timestamp, bumped on save/compile. |
+
+### `dimensions` (Dimensions)
+
+| Field    | Type   | Default |
+| -------- | ------ | ------- |
+| `width`  | number | 1280    |
+| `height` | number | 720     |
+
+Element positions/sizes are in the same pixel space as `dimensions`.
+
+### `theme` (Theme)
+
+| Field        | Type   | Notes                                    |
+| ------------ | ------ | ---------------------------------------- |
+| `id`         | string | Preset id.                               |
+| `name`       | string | Human-readable name.                     |
+| `background` | string | CSS color of the slide surface.          |
+| `foreground` | string | Primary text color.                      |
+| `accent`     | string | Accent (charts, borders, highlights).    |
+| `muted`      | string | Secondary text color.                    |
+| `font`       | string | CSS `font-family` stack for slide text.  |
+
+### `slides` (Slide[])
+
+```jsonc
+{
+  "id": "slide-01",
+  "layout": "title-body",
+  "elements": [ /* Element[] */ ]
+}
+```
+
+`layout` is one of: `title`, `title-subtitle`, `title-body`, `two-column`, `blank`.
+
+### `elements` (Element[])
+
+```jsonc
+{
+  "id": "revenue-chart",
+  "type": "chart",
+  "position": { "x": 120, "y": 240 },
+  "size": { "width": 620, "height": 340 },
+  "properties": { "chartType": "line" }
+}
+```
+
+- `position` / `size` are required for every element.
+- `properties` is a free-form `Record<string, unknown>`; element-specific keys live here.
+
+`type` is one of: `title`, `subtitle`, `body`, `image`, `shape`, `chart`,
+`table`, `divider`, `callout`.
+
+#### Properties used by the renderer today
+
+| `type`    | `properties` keys | Renderer behavior (`apps/web/src/components/Slides.tsx`) |
+| --------- | ----------------- | -------------------------------------------------------- |
+| `title`   | `text`            | 54px / 700 / line-height 1.1                             |
+| `subtitle`| `text`            | 28px / 400 / `theme.muted`                               |
+| `body`    | `text`            | 20px / 1.6 / `theme.muted` / `white-space: pre-line`     |
+| `chart`   | `chartType`       | placeholder box (real Recharts not wired yet)            |
+| others    | —                 | not rendered yet (returns `null`)                        |
+
+### `comments` (Comment[])
+
+```jsonc
+{
+  "id": "comment-17",
+  "slideId": "slide-07",
+  "elementId": "chart-02",       // optional: target a specific element
+  "message": "Make this chart larger and move it left.",
+  "status": "open",              // "open" | "resolved"
+  "imageUrl": "...",             // optional: data URL attachment
+  "link": "https://..."          // optional: web link attachment
+}
+```
+
+`elementId` is optional; a comment may target a whole slide. `imageUrl`/`link`
+are optional attachments (the frontend supports image upload → data URL and a
+plain web link).
+
+## Compile method (devised)
+
+Compiling consumes open human feedback and produces an updated deck:
+
+1. Collect open comments (`status === "open"`).
+2. Agent reads each comment and applies a targeted change to the referenced
+   slide/element (`deck_change`).
+3. On compile, open comments are marked `resolved` and `metadata.updatedAt` is
+   refreshed, then the state is serialized back to `deck.json`.
+
+The frontend `compile` action currently implements only the "mark resolved"
+step against the in-memory mock store; the full JSON serialization is not wired
+into the button yet.
+
+## MCP tool surface
+
+Registered in `packages/mcp/src/`. Tool status: ✅ implemented, ⏳ stub.
+
+| Group      | Tool                   | Status |
+| ---------- | ---------------------- | ------ |
+| Lifecycle  | `deck_init`            | ✅ |
+|            | `deck_new`             | ✅ |
+|            | `deck_open`            | ✅ |
+|            | `deck_status`          | ✅ |
+| Knowledge  | `deck_get_schema`      | ✅ (JSON Schema in `tools/knowledge.ts`) |
+|            | `deck_get_instructions`| ✅ |
+|            | `deck_load_skill`      | ⏳ (Phase 2) |
+| Editing    | `deck_change`          | ✅ (`{ slideId, elementId, patch }`) |
+|            | `deck_add_slide`       | ✅ |
+|            | `deck_delete_slide`    | ✅ |
+|            | `deck_reorder_slide`   | ✅ |
+| Feedback   | `deck_comment`         | ✅ |
+|            | `deck_comments`        | ✅ |
+|            | `deck_resolve_comment` | ✅ |
+|            | `deck_preview`         | ⏳ (Phase 5) |
+|            | `deck_review`          | ⏳ (Phase 6) |
+| Output     | `deck_save`            | ✅ (writes `deck.json`) |
+|            | `deck_export`          | ⏳ (Phase 5) |
+
+`deck_change` patch shape (from `packages/core/src/store.ts` `ElementPatch`):
+
+```jsonc
+{ "text": "...", "x": 0, "y": 0, "width": 0, "height": 0, "properties": {} }
+// all fields optional; only provided keys are applied
+```
+
+## Themes / presets
+
+`packages/core/src/presets.ts` exports four presets (`minimal`, `consulting`,
+`corporate`, `dark`). Each is a `{ id, name, theme }` object; `deck_new` and the
+frontend preset dropdown select by preset `id`.

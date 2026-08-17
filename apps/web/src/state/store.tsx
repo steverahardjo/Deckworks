@@ -21,7 +21,8 @@ export type Action =
   | { type: "select-slide"; slideId: string }
   | { type: "apply-preset"; presetId: string }
   | { type: "add-comment"; comment: Comment }
-  | { type: "add-slide"; slide: Slide };
+  | { type: "add-slide"; slide: Slide }
+  | { type: "compile" };
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -63,6 +64,19 @@ function reducer(state: State, action: Action): State {
           slides: [...state.presentation.slides, action.slide],
         },
       };
+    case "compile": {
+      const hasOpen = state.presentation.comments.some((c) => c.status === "open");
+      if (!hasOpen) return state;
+      return {
+        ...state,
+        presentation: {
+          ...state.presentation,
+          comments: state.presentation.comments.map((c) =>
+            c.status === "open" ? { ...c, status: "resolved" as const } : c
+          ),
+        },
+      };
+    }
   }
 }
 
