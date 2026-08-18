@@ -13,10 +13,17 @@ MCP server, and any future CLI.
 ```
 my-deck/
   deck.json          # canonical Presentation state (single source of truth)
+  comments/          # per-comment image attachments (data URLs decoded to PNG/JPEG/WebP)
+  slides/            # per-slide screenshots captured at compile time
 ```
 
-`packages/core/src/store.ts` (`DeckworksApp`) reads/writes this file via
+`packages/core/src/store.ts` (`DeckworksApp`) reads/writes `deck.json` via
 `deck_init`, `deck_new`, `deck_open`, and `deck_save`.
+
+The web server (`apps/web/index.ts`) is the other writer. It instantiates its
+own `DeckworksApp` pointed at `DECKWORK_PROJECT_DIR` (default `.deckworks`),
+serves `GET/POST /api/comments`, and `POST /api/compile`. The frontend is the
+authoritative editor; the backend persists whatever the frontend sends.
 
 ## Top-level shape
 
@@ -69,11 +76,16 @@ Element positions/sizes are in the same pixel space as `dimensions`.
 {
   "id": "slide-01",
   "layout": "title-body",
-  "elements": [ /* Element[] */ ]
+  "elements": [ /* Element[] */ ],
+  "screenshot": "slides/slide-02.png"   // optional: annotated render captured at compile
 }
 ```
 
 `layout` is one of: `title`, `title-subtitle`, `title-body`, `two-column`, `blank`.
+
+`screenshot` is set by `POST /api/compile` when a slide has at least one open
+comment. It points at the annotated render the frontend captured for that slide
+(relative to the project directory).
 
 ### `elements` (Element[])
 
@@ -103,6 +115,10 @@ Element positions/sizes are in the same pixel space as `dimensions`.
 | `chart`   | `chartType`       | placeholder box (real Recharts not wired yet)            |
 | others    | —                 | not rendered yet (returns `null`)                        |
 
+The same drawing rules are mirrored in `apps/web/src/lib/captureSlide.ts`,
+which re-renders a slide to a `<canvas>` (background, text, chart placeholder,
+plus red comment pins with labels) for compile-time screenshots.
+
 ### `comments` (Comment[])
 
 ```jsonc
@@ -113,27 +129,59 @@ Element positions/sizes are in the same pixel space as `dimensions`.
   "message": "Make this chart larger and move it left.",
   "status": "open",              // "open" | "resolved"
   "imageUrl": "...",             // optional: data URL attachment
-  "link": "https://..."          // optional: web link attachment
+  "link": "https://...",         // optional: web link attachment
+  "position": { "x": 430, "y": 300 },   // optional: anchor in slide coordinates
+  "screenshot": "comments/comment-17.png" // optional: image written by the backend
 }
 ```
 
 `elementId` is optional; a comment may target a whole slide. `imageUrl`/`link`
 are optional attachments (the frontend supports image upload → data URL and a
-plain web link).
+plain web link). `position` is set by the frontend when a comment is anchored to
+a spot on the slide (double-click). `screenshot` is written by the backend when
+the POST body carries an image data URL.
 
-## Compile method (devised)
+## Compile method
 
-Compiling consumes open human feedback and produces an updated deck:
+Compiling consumes open human feedback and produces an updated deck. The flow
+is **per slide, not per comment**: one annotated screenshot per slide that has
+open comments, captured at compile time.
 
-1. Collect open comments (`status === "open"`).
-2. Agent reads each comment and applies a targeted change to the referenced
-   slide/element (`deck_change`).
-3. On compile, open comments are marked `resolved` and `metadata.updatedAt` is
-   refreshed, then the state is serialized back to `deck.json`.
+1. User double-clicks a slide to open the comment bar, types feedback, sends.
+   The comment is `POST`ed to `/api/comments` (optionally with an image
+   attachment) and stored with `status: "open"` plus an anchor `position`.
+2. Comments are re-hydrated into the frontend store on editor mount via
+   `GET /api/comments` (`hydrate-comments` action).
+3. Pressing **Compile** (TopBar, enabled when ≥1 open comment) collects every
+   slide with open comments, renders each slide to a canvas with **all** of
+   that slide's comment pins drawn on it (`apps/web/src/lib/captureSlide.ts`),
+   and `POST`s them to `/api/compile`:
+   ```jsonc
+   // POST /api/compile
+   { "slides": [ { "slide": Slide, "screenshot": "data:image/png;base64,..." } ] }
+   ```
+4. The backend decodes each screenshot into `slides/<slideId>.png`, upserts the
+   slide record (attaching `slide.screenshot`), marks every open comment
+   `resolved`, bumps `metadata.updatedAt`, and saves `deck.json`.
+5. The frontend `compile` action mirrors the resolution in local state.
 
-The frontend `compile` action currently implements only the "mark resolved"
-step against the in-memory mock store; the full JSON serialization is not wired
-into the button yet.
+Because the screenshot is captured at compile time and drawn from current state,
+a slide with three comments produces **one** image showing all three pins — a
+single source of truth for a multimodal agent to know what to change.
+
+## HTTP bridge (web backend)
+
+`apps/web/index.ts` (Bun `serve`) exposes:
+
+| Route             | Method | Purpose |
+| ----------------- | ------ | ------- |
+| `/api/comments`   | GET    | Returns `{ comments: Comment[] }` for hydration. |
+| `/api/comments`   | POST   | Body `{ comment, screenshot? }`. Saves an image attachment to `comments/<id>.<ext>`, stores the comment, saves `deck.json`. Returns `{ comment }`. |
+| `/api/compile`    | POST   | Body `{ slides: [{ slide, screenshot }] }`. Writes `slides/<slideId>.<ext>`, upserts slide records, resolves open comments, saves. Returns `{ slides }`. |
+
+Project directory is `DECKWORK_PROJECT_DIR` (default `.deckworks`). The MCP
+server and the web backend each hold their own `DeckworksApp`; they share state
+through `deck.json` on disk.
 
 ## MCP tool surface
 
@@ -169,6 +217,23 @@ Registered in `packages/mcp/src/`. Tool status: ✅ implemented, ⏳ stub.
 
 ## Themes / presets
 
-`packages/core/src/presets.ts` exports four presets (`minimal`, `consulting`,
-`corporate`, `dark`). Each is a `{ id, name, theme }` object; `deck_new` and the
-frontend preset dropdown select by preset `id`.
+`packages/core/src/presets.ts` exports eleven presets. Each is a
+`{ id, name, theme }` object; `deck_new` and the frontend "look" carousel /
+preset dropdown select by preset `id`.
+
+| id          | name       | Brand obfuscation |
+| ----------- | ---------- | ----------------- |
+| `minimal`   | Minimal    | —                 |
+| `consulting`| Consulting | —                 |
+| `corporate` | Corporate  | —                 |
+| `dark`      | Dark       | —                 |
+| `editorial` | Editorial  | —                 |
+| `academic`  | Academic   | —                 |
+| `startup`   | Startup    | —                 |
+| `mckinsey`  | M\*k\*ns\*y| asterisks hide brand letters |
+| `deloitte`  | D\*lo\*tt\*| asterisks hide brand letters |
+| `c4e`       | C4e        | —                 |
+| `travel`    | Travel     | —                 |
+
+Brand looks (`mckinsey`, `deloitte`) are displayed obfuscated (only `*` used)
+to avoid trademark rendering while keeping the look selectable.

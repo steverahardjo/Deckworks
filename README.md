@@ -8,19 +8,19 @@ It combines:
 
 MCP tools for agent-driven presentation workflows
 
-Skills that teach agents how to create and refine decks
+Skills that teach agents how to create and refine decks (planned)
 
 A local filesystem-based presentation project
 
 React-based presentation rendering
 
-Recharts for data visualization
+Recharts for data visualization (planned)
 
 Browser-based preview
 
-PDF, HTML, and PPTX export
+PDF, HTML, and PPTX export (planned)
 
-TUI template selection
+Look carousel / preset selection (TUI planned for CLI)
 
 Human comments and agent-driven iteration
 
@@ -47,7 +47,19 @@ Deckworks is not intended to be a thin "LLM → PowerPoint" wrapper. The present
 
 Status
 
-Early development.
+Early development. What exists today:
+
+- **MCP server** (`packages/mcp`, stdio) — lifecycle, knowledge, editing,
+  feedback, and output tools over a `deck.json` project (`packages/core/store.ts`).
+- **Web app** (`apps/web`) — React editor with a DeepSeek-styled light theme:
+  starter page (focus + materials + look carousel), slide canvas with a
+  shadow-DOM style boundary, slide rail, preset panel, and a draggable
+  comment bar anchored to slide positions.
+- **Feedback loop** — comments are sent to a local backend bridge
+  (`apps/web/index.ts`, `DECKWORK_PROJECT_DIR` default `.deckworks`). Pressing
+  **Compile** captures one annotated screenshot per slide that has open
+  comments and persists slides/screenshots into `deck.json`, ready for the
+  agent to consume.
 
 The implementation order is intentionally:
 
@@ -420,23 +432,10 @@ A Deckworks project should be self-contained and portable.
 Example:
 
 my-deck/
-├── deck.json
-├── theme.json
-├── assets/
-│   ├── logo.png
-│   └── chart-data.json
-├── output/
-│   ├── deck.html
-│   ├── deck.pdf
-│   └── deck.pptx
-├── renders/
-│   ├── slide-01.png
-│   ├── slide-02.png
-│   └── ...
-├── comments.json
-└── history/
-    ├── 000001.json
-    └── 000002.json
+├── deck.json          # canonical Presentation state (single source of truth)
+├── comments/          # comment image attachments
+├── slides/            # annotated per-slide screenshots (written on compile)
+└── assets/            # (future) logos, chart data, etc.
 
 The exact structure may evolve.
 
@@ -571,18 +570,22 @@ Example:
   "slideId": "slide-07",
   "elementId": "chart-02",
   "message": "Make this chart larger and move it left.",
-  "status": "open"
+  "status": "open",
+  "position": { "x": 430, "y": 300 }
 }
 
 The workflow is:
 
-Human comment
+Human comments on a slide
       ↓
-Comment stored
+Comment stored via POST /api/comments
       ↓
-Agent reads comment
+Human presses Compile
       ↓
-Agent identifies target
+Each slide with open comments is captured (annotated with its pins) and
+sent via POST /api/compile
+      ↓
+Agent reads slide.screenshot (multimodal) + comments
       ↓
 deck_change
       ↓
@@ -592,45 +595,25 @@ deck_preview
       ↓
 deck_review
 
+One screenshot per slide per compile, not one per comment — so a slide with
+three comments produces a single image showing all three pins.
+
 This feedback loop is one of the central product features.
 
 Repository architecture
 
-A possible repository structure:
+Current structure:
 
 deckworks/
 ├── apps/
-│   ├── web/
-│   └── cli/
+│   └── web/             # React editor + Bun.serve backend bridge
 │
 ├── packages/
-│   ├── core/
-│   ├── mcp/
-│   ├── renderer/
-│   ├── charts/
-│   ├── export/
-│   └── storage/
+│   ├── core/            # Presentation types, store (deck.json I/O), presets
+│   └── mcp/             # stdio MCP server wrapping DeckworksApp
 │
-├── skills/
-│   ├── setup/
-│   ├── create/
-│   ├── edit/
-│   ├── review/
-│   └── export/
-│
-├── templates/
-│   ├── consulting/
-│   ├── minimal/
-│   ├── corporate/
-│   ├── editorial/
-│   ├── academic/
-│   ├── startup/
-│   └── dark/
-│
-├── examples/
-├── tests/
-├── docs/
-├── AGENTS.md
+├── docs/                # deck-json.md, frontend-plan.md
+├── SKILL.md             # (empty placeholder; skills ship in Phase 2)
 └── README.md
 
 This is a starting point, not a rigid requirement.
@@ -647,21 +630,23 @@ MCP TypeScript SDK
 
 React
 
+React Router
+
 Bun bundler (HTML imports)
 
-CSS
+Tailwind CSS v4
+
+shadcn/ui-style primitives
 
 SVG
 
-shadcn/ui
+Recharts (planned)
 
-Recharts
-
-Playwright
+Playwright (planned for PDF/PNG export)
 
 Chromium
 
-PptxGenJS
+PptxGenJS (planned)
 
 JSON/filesystem persistence
 
@@ -745,6 +730,11 @@ Acceptance test:
 
 A presentation created through MCP renders correctly in the browser and can be visually inspected by a human.
 
+Status: mostly built. React renderer, theme system, browser preview, look
+carousel (replaces TUI), and the comment system exist. Inline visual editing
+is intentionally out of scope (feedback goes through comments). Recharts
+integration is still pending — chart elements render as placeholder boxes.
+
 Phase 4 — Backend/application services
 
 Build:
@@ -765,6 +755,11 @@ Acceptance test:
 
 MCP, CLI, and frontend operate on the same presentation state without duplicating business logic.
 
+Status: partial. `DeckworksApp` filesystem persistence exists in
+`packages/core`; the web backend bridges the frontend to the same project
+directory. Revision history, asset management, and a shared render/export
+service are not built.
+
 Phase 5 — Export
 
 Build:
@@ -783,6 +778,9 @@ Acceptance test:
 
 The same presentation can be saved and exported to HTML, PDF, and PPTX.
 
+Status: PNG slide rendering exists (the frontend's compile-time capture uses a
+canvas → PNG pipeline). HTML/PDF/PPTX export remain stubs.
+
 Phase 6 — Agent feedback loop
 
 Build:
@@ -800,6 +798,11 @@ automated layout checks
 Acceptance test:
 
 A human can comment on a rendered slide and an agent can make a targeted change and preview the result again.
+
+Status: the human side is built — anchored comments, per-slide annotated
+screenshots on compile, hydration, and comment resolution. The agent side
+(reading screenshots, `deck_change`, re-preview) is wired via MCP tools but not
+yet exercised end-to-end with a generation model.
 
 Non-goals for the MVP
 

@@ -1,12 +1,13 @@
 # Deckworks Frontend — Development Plan
 
-Agent-native presentation editor chrome. Three-stage build.
+Agent-native presentation editor chrome. This file tracks the build; completed
+sections describe what exists today.
 
 ## Target layout
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│ [deck-name textbar]                      [Export ▾]          │  ← TopBar
+│ [deck-name textbar]                    [Compile] [Export ▾]   │  ← TopBar
 ├──────────┬───────────────────────────────────────────────────┤
 │ Slide 1  │                                                   │
 │ Slide 2  │            Slides (main canvas)                   │
@@ -21,64 +22,110 @@ Agent-native presentation editor chrome. Three-stage build.
 └──────────┴───────────────────────────────────────────────────┘
 ```
 
-## Setup decisions
+## Setup decisions (implemented)
 
-- **Restructure to `apps/web/`** — move the React app out of `src/`. The `Bun.serve` entry (`src/index.ts`) moves into `apps/web/index.ts`. Root `package.json` scripts (`dev`, `build`, `start`) retarget to `apps/web`. Update `tsconfig.json` path `@/*` → `./apps/web/src/*`.
-- **Tailwind v4 + shadcn/ui** — Tailwind v4 via the standalone `@tailwindcss/cli` (most reliable with Bun's HTML-import bundler, which doesn't run Vite/PostCSS plugins). `bun dev` runs `bun --hot apps/web/index.ts` plus a Tailwind watch; `bun build` compiles CSS first. shadcn `init` with the "manual/none" framework and copy in primitives (`button`, `input`, `dropdown-menu`, `scroll-area`, `tooltip`, `separator`).
-- **Mock state** — TypeScript types matching AGENTS.md (`Presentation/Slide/Element`), a sample 3-slide deck, held in a lightweight React store (context + `useReducer`). No `deck.json` reads yet.
-- **Slides isolation** — `Slides` is built as a container that will later load external per-slide HTML/CSS, so its content area uses a shadow-DOM/style boundary. Stage 1–2 render React elements from state; the boundary just isolates chrome styles from slide content.
+- **Structure**: `apps/web/` holds the React app; `Bun.serve` entry at
+  `apps/web/index.ts`. Root `package.json` scripts (`dev`, `build`, `start`,
+  `mcp`) target it.
+- **Stack**: Tailwind v4 (via `bun-plugin-tailwind`), React 19, shadcn/ui-style
+  primitives in `apps/web/src/components/ui/`, React Router (`react-router-dom`
+  7) for routing. TanStack Router was tried first but dropped due to a Bun
+  runtime circular-dependency error (`replaceRouteChunk`); React Router works.
+- **Routing** (`apps/web/src/router.tsx`): `/` → StarterPage, `/slides` →
+  EditorShell. `build` applies the selected look and navigates to `/slides`.
+- **Styling**: DeepSeek-inspired design language — light bluish theme (default,
+  no forced `.dark`), signature blue `#3964fe`/`#5686fe`, pill buttons
+  (`rounded-full`), soft top gradient, glass cards with 1px inset highlight.
+  Fonts: self-hosted "Anthropic Sans Text" (OTF) with Inter fallback.
+- **Slides isolation**: `Slides` content renders inside a shadow-DOM style
+  boundary (`ShadowBoundary.tsx`) so slide styles never bleed into chrome.
+- **State**: context + `useReducer` in `apps/web/src/state/store.tsx` seeded
+  from `mockPresentation.ts` (3 slides, 1 comment).
 
-## File structure (target)
+## File structure (current)
 
 ```
 apps/web/
-  index.ts                # Bun.serve entry (was src/index.ts)
+  index.ts                # Bun.serve entry: HTML + /api/comments + /api/compile
   index.html
+  build.ts                # bun build (Tailwind plugin) → dist/
   src/
-    main.tsx              # entry (was frontend.tsx)
-    App.tsx               # layout shell
-    components/
-      TopBar.tsx          # filename textbar + export button
-      SlideRail.tsx       # left scrollable slide thumbnails
-      Slides.tsx          # main canvas + shadow boundary
-      CommentBar.tsx      # floating comment/edit panel
-      PresetPanel.tsx     # bottom-right theme presets
-      ExportMenu.tsx      # dropdown (PDF/PPT/HTML)
-      ui/                 # shadcn primitives
-    lib/cn.ts
+    main.tsx              # entry (renders router)
+    App.tsx               # RouterProvider
+    router.tsx            # createBrowserRouter (/ and /slides)
+    index.css             # tailwind entry + theme tokens + fonts
     state/
-      store.tsx           # context + reducer
-      mockPresentation.ts
-    types/presentation.ts
-  index.css               # tailwind entry
+      store.tsx           # context + reducer (presentation, materials, focus, directive)
+      mockPresentation.ts # sample 3-slide deck
+      materials.ts        # fileToMaterial/detectKind for material ingestion
+      types.ts            # frontend Material / ProjectDirectory types
+    lib/
+      captureSlide.ts     # canvas render of a slide + comment pins → PNG data URL
+      utils.ts            # cn()
+    components/
+      TopBar.tsx          # deck title, Compile (with spinner), ExportMenu
+      SlideRail.tsx       # slide thumbnails + "+" → ProjectModal
+      Slides.tsx          # canvas + shadow boundary + comment pins + arrow-key nav + debug
+      CommentBar.tsx      # floating draggable comment panel (anchored, sends to backend)
+      ProjectModal.tsx    # project-wide chat directive + file dropzone (from "+")
+      PresetPanel.tsx     # bottom-right look presets
+      ExportMenu.tsx      # PDF/PPTX/HTML dropdown (stubs)
+      ShadowBoundary.tsx  # shadow-root isolation wrapper
+      FileTypeIcon.tsx
+      ui/                 # button, input, dropdown-menu, scroll-area, separator, tooltip
+    components/starter/
+      StarterPage.tsx     # "/" landing
+      FocusInput.tsx      # build focus
+      SourcePicker.tsx    # drag-drop materials
+      LookCarousel.tsx    # horizontal look cards
+      LookCard.tsx        # mini opening-slide preview per look
 ```
 
-## Stage 1 — Scaffold + layout shell
+## Stage 1 — Scaffold + layout shell ✅
 
-- Restructure to `apps/web`, wire scripts + tsconfig.
-- Set up Tailwind v4 + shadcn/ui (init, `cn()`, base primitives).
-- Build the shell with all five regions present (TopBar, SlideRail, Slides, PresetPanel, CommentBar, ExportMenu) using placeholder content. No state wiring — just correct grid/flex layout and a coherent dark theme.
+Done: app restructured into `apps/web`, Tailwind v4 + primitives wired, shell
+with all regions present (TopBar, SlideRail, Slides, PresetPanel, CommentBar,
+ExportMenu), coherent DeepSeek-styled theme.
 
-**Done when:** `bun dev` serves a static shell; all regions render at the correct positions.
+## Stage 2 — Slides renderer + interaction ✅
 
-## Stage 2 — Slides renderer + interaction
+Done:
+- `Slides` renders the active slide from state (title/subtitle/body/chart
+  placeholders), plus open-comment **pins** on the surface (blue dot, click to
+  reopen the thread).
+- Arrow-key navigation (↓/→/PageDown next, ↑/←/PageUp prev); backtick (`` ` ``)
+  toggles a debug overlay showing element bounding boxes.
+- `SlideRail` renders thumbnails; clicking switches slides. The `+` button opens
+  `ProjectModal` (directive + material dropzone) — there is no standalone slide
+  add.
+- `CommentBar` opens at the double-click anchor (position stored in slide
+  coordinates), supports text/image/link, and **sends** the comment to the
+  backend (`POST /api/comments`) with sending/sent/error feedback.
+- Comments are **hydrated on mount** (`GET /api/comments` →
+  `hydrate-comments` action), so threads survive reloads.
+- Starter page (focus, source picker, look carousel) feeds the `build` action
+  which applies the selected look's theme and navigates to `/slides`.
 
-- Implement `Slides` to render the active slide from mock state (title/subtitle/body/chart placeholders from `Element[]`).
-- `SlideRail` renders thumbnails from state; clicking switches the active slide.
-- Filename textbar reads/writes `metadata.title`.
-- `CommentBar` works inside `Slides`: open/close, add/edit a comment targeting the current slide (mock `comments[]` in state).
+## Stage 3 — Compile + backend bridge ✅
 
-**Done when:** you can switch slides via the rail, rename the deck, and add a comment — all reflected in mock state.
-
-## Stage 3 — Presets + export
-
-- `PresetPanel` applies theme/template presets (e.g. Minimal, Consulting, Corporate, Dark) that restyle the active slide via the mock theme.
-- `ExportMenu` dropdown with PDF/PPT/HTML. HTML does a real standalone download of the current slide; PDF/PPT are stubs (toast "not implemented") until the export service exists.
-
-**Done when:** presets visibly restyle a slide; export dropdown opens and HTML produces a download.
+Done:
+- **Compile** captures one annotated screenshot **per slide with open
+  comments** (all that slide's pins drawn at once via `captureSlide.ts`), sends
+  them to `POST /api/compile`, and resolves open comments locally.
+- The backend (`apps/web/index.ts`) persists to `.deckworks/deck.json` via
+  `DeckworksApp`:
+  - `GET /api/comments` — hydration source.
+  - `POST /api/comments` — stores a comment (+ optional image attachment → PNG).
+  - `POST /api/compile` — writes `slides/<id>.png`, upserts slide records,
+    resolves open comments.
+- `.deckworks/` is gitignored runtime project state.
 
 ## Open items
 
-1. **Tailwind tooling** — standalone `@tailwindcss/cli` (two-process dev) vs dropping Tailwind and hand-styling the chrome (simpler single-process dev, contradicts shadcn choice).
-2. **Export behavior in Stage 3** — only HTML works; PDF/PPT are stubs for now.
-3. **Comment bar scope** — floating panel with add + inline edit of an existing comment (mock), no persistence yet.
+1. **Export behavior** — ExportMenu items are stubs; only the dropdown renders.
+2. **Inline slide editing** — intentionally out of scope: all changes are
+   handled through comments (per product decision).
+3. **Charts** — `chart` elements render as placeholder boxes; Recharts not
+   wired yet.
+4. **Directive** — `directive` is stored in state via ProjectModal but not yet
+   consumed by any generation/backend path.
