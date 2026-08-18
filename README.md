@@ -60,6 +60,11 @@ Early development. What exists today:
   **Compile** captures one annotated screenshot per slide that has open
   comments and persists slides/screenshots into `deck.json`, ready for the
   agent to consume.
+- **Export** — the **Export** menu (PDF / HTML / PPTX) posts the live
+  presentation to the backend, which writes per-slide HTML files into
+  `tmp/slides/` and compiles the deck (browserless via `@react-pdf/renderer`
+  for PDF, `pptxgenjs` for PPTX). The same op backs the MCP `deck_export`
+  tool.
 
 The implementation order is intentionally:
 
@@ -778,8 +783,13 @@ Acceptance test:
 
 The same presentation can be saved and exported to HTML, PDF, and PPTX.
 
-Status: PNG slide rendering exists (the frontend's compile-time capture uses a
-canvas → PNG pipeline). HTML/PDF/PPTX export remain stubs.
+Status: HTML, PDF, and PPTX export are implemented. The web backend
+(`apps/web/index.ts`) and the MCP `deck_export` tool share one pipeline in
+`packages/export`: it writes one self-contained HTML file per slide into
+`tmp/slides/`, then compiles the deck — HTML merges the slide files, PDF prints
+every slide as one page (`@react-pdf/renderer`, browserless), and PPTX builds a
+native PowerPoint file (`pptxgenjs`). PNG slide rendering exists via the
+frontend's compile-time canvas capture.
 
 Phase 6 — Agent feedback loop
 

@@ -120,9 +120,27 @@ Done:
     resolves open comments.
 - `.deckworks/` is gitignored runtime project state.
 
+## Stage 4 — Export (HTML / PDF / PPTX) ✅
+
+Done:
+- The **Export** menu (PDF / HTML / PPTX) posts the live frontend
+  `presentation` to `POST /api/export`.
+- The backend (`apps/web/index.ts`) shares one pipeline with the MCP
+  `deck_export` tool (`packages/export/src/ops.ts` `exportDeck`): it writes
+  one self-contained HTML file per slide into `tmp/slides/slide-N.html`, then
+  compiles the deck into `tmp/export.<fmt>`:
+  - **html** — `compileSlidesFromDir` loads every slide file and merges them
+    into a single standalone document.
+  - **pdf** — `renderPresentationPdf` prints every slide as one 1280×720 page
+    (`@react-pdf/renderer`, browserless, embedded Anthropic fonts).
+  - **pptx** — `renderPresentationPptx` builds a native PowerPoint
+    (`pptxgenjs`), converting px → inches at 96 DPI.
+- Per-slide files are left on disk so the frontend can wrap/display them in the
+  Slide component and agents can read them directly.
+
 ## Open items
 
-1. **Export behavior** — ExportMenu items are stubs; only the dropdown renders.
+1. ~~Export behavior~~ — done: PDF / HTML / PPTX all export all slides.
 2. **Inline slide editing** — intentionally out of scope: all changes are
    handled through comments (per product decision).
 3. **Charts** — `chart` elements render as placeholder boxes; Recharts not

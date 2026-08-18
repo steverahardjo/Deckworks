@@ -206,7 +206,7 @@ Registered in `packages/mcp/src/`. Tool status: ✅ implemented, ⏳ stub.
 |            | `deck_preview`         | ⏳ (Phase 5) |
 |            | `deck_review`          | ⏳ (Phase 6) |
 | Output     | `deck_save`            | ✅ (writes `deck.json`) |
-|            | `deck_export`          | ⏳ (Phase 5) |
+|            | `deck_export`          | ✅ (html · pdf · pptx) |
 
 `deck_change` patch shape (from `packages/core/src/store.ts` `ElementPatch`):
 
