@@ -54,6 +54,17 @@ export function Slides() {
     });
   };
 
+  const handlePinClick = (pinEl: HTMLElement) => {
+    const surface = surfaceRef.current;
+    if (!surface) return;
+    const surfaceRect = surface.getBoundingClientRect();
+    const pinRect = pinEl.getBoundingClientRect();
+    commentRef.current?.openAt({
+      x: pinRect.left + pinRect.width / 2 - surfaceRect.left,
+      y: pinRect.top + pinRect.height / 2 - surfaceRect.top,
+    });
+  };
+
   return (
     <main className="relative flex flex-1 items-center justify-center overflow-hidden bg-background p-6">
       <div
@@ -70,7 +81,13 @@ export function Slides() {
           style={{ background: presentation.theme.background }}
         >
           <ShadowBoundary>
-            {slide ? <SlideSurface slide={slide} debug={debug} /> : null}
+            {slide ? (
+              <SlideSurface
+                slide={slide}
+                debug={debug}
+                onPinClick={handlePinClick}
+              />
+            ) : null}
           </ShadowBoundary>
         </div>
 
@@ -100,9 +117,20 @@ export function Slides() {
   );
 }
 
-function SlideSurface({ slide, debug }: { slide: Slide; debug: boolean }) {
+function SlideSurface({
+  slide,
+  debug,
+  onPinClick,
+}: {
+  slide: Slide;
+  debug: boolean;
+  onPinClick: (pin: HTMLElement) => void;
+}) {
   const { presentation } = useAppState();
   const { theme, dimensions } = presentation;
+  const pins = presentation.comments.filter(
+    (c) => c.slideId === slide.id && c.status === "open" && c.position
+  );
 
   return (
     <div
@@ -119,6 +147,25 @@ function SlideSurface({ slide, debug }: { slide: Slide; debug: boolean }) {
     >
       {slide.elements.map((el) => (
         <SlideElement key={el.id} element={el} debug={debug} />
+      ))}
+      {pins.map((c) => (
+        <button
+          key={c.id}
+          type="button"
+          ref={(el) => {
+            if (el) el.dataset.pinId = c.id;
+          }}
+          onClick={(e) => onPinClick(e.currentTarget)}
+          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-primary p-1 shadow-[0_4px_12px_rgba(57,100,254,0.4)]"
+          style={{
+            left: c.position!.x,
+            top: c.position!.y,
+          }}
+          aria-label="Open comment"
+          title="Open comment"
+        >
+          <span className="block size-2 rounded-full bg-white" />
+        </button>
       ))}
     </div>
   );

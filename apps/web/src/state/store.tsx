@@ -26,6 +26,7 @@ export type Action =
   | { type: "select-slide"; slideId: string }
   | { type: "apply-preset"; presetId: string }
   | { type: "add-comment"; comment: Comment }
+  | { type: "hydrate-comments"; comments: Comment[] }
   | { type: "add-slide"; slide: Slide }
   | { type: "compile" }
   | { type: "add-material"; material: Material }
@@ -67,6 +68,18 @@ function reducer(state: State, action: Action): State {
           comments: [...state.presentation.comments, action.comment],
         },
       };
+    case "hydrate-comments": {
+      const existing = new Set(state.presentation.comments.map((c) => c.id));
+      const fresh = action.comments.filter((c) => !existing.has(c.id));
+      if (!fresh.length) return state;
+      return {
+        ...state,
+        presentation: {
+          ...state.presentation,
+          comments: [...state.presentation.comments, ...fresh],
+        },
+      };
+    }
     case "add-slide":
       return {
         ...state,

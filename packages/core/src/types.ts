@@ -38,6 +38,7 @@ export interface Slide {
   id: string;
   layout: SlideLayout;
   elements: Element[];
+  screenshot?: string;
 }
 
 export interface Theme {
@@ -58,6 +59,8 @@ export interface Comment {
   status: "open" | "resolved";
   imageUrl?: string;
   link?: string;
+  position?: Position;
+  screenshot?: string;
 }
 
 export interface PresentationMetadata {

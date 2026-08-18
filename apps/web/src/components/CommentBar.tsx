@@ -5,7 +5,17 @@ import {
   useRef,
   useState,
 } from "react";
-import { Feather, X, Send, ImagePlus, Link2, ExternalLink } from "lucide-react";
+import {
+  Feather,
+  X,
+  Send,
+  ImagePlus,
+  Link2,
+  ExternalLink,
+  Loader2,
+  Check,
+  AlertCircle,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +27,8 @@ const DRAG_THRESHOLD = 4;
 export interface CommentBarHandle {
   openAt: (pos: { x: number; y: number }) => void;
 }
+
+type SendStatus = "idle" | "sending" | "sent" | "error";
 
 export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
   function CommentBar({ slide }, ref) {
@@ -30,9 +42,12 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [link, setLink] = useState("");
     const [showLink, setShowLink] = useState(false);
+    const [status, setStatus] = useState<SendStatus>("idle");
+    const [errorMsg, setErrorMsg] = useState("");
 
     const barRef = useRef<HTMLDivElement>(null);
     const fileRef = useRef<HTMLInputElement>(null);
+    const anchorRef = useRef<{ x: number; y: number } | null>(null);
     const dragRef = useRef<{
       pointerId: number;
       startX: number;
@@ -63,10 +78,18 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
             Math.max(0, y),
             Math.max(0, stageRect.height - barRect.height)
           );
+          const { width: stageW, height: stageH } = stageRect;
+          const { width: slideW, height: slideH } = presentation.dimensions;
+          anchorRef.current = {
+            x: Math.round((p.x / stageW) * slideW),
+            y: Math.round((p.y / stageH) * slideH),
+          };
         }
         setPos({ x, y });
         setPlaced(true);
         setOpen(true);
+        setStatus("idle");
+        setErrorMsg("");
       },
     }));
 
@@ -138,20 +161,41 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
       e.target.value = "";
     };
 
-    const send = () => {
+    const send = async () => {
       const trimmed = message.trim();
       const trimmedLink = link.trim();
       if (!trimmed && !imageUrl && !trimmedLink) return;
+      if (status === "sending") return;
 
-      const comment: Comment = {
+      setStatus("sending");
+      setErrorMsg("");
+
+      const baseComment: Comment = {
         id: `comment-${Date.now()}`,
         slideId: slide.id,
         message: trimmed,
         status: "open",
+        ...(anchorRef.current ? { position: anchorRef.current } : {}),
         ...(imageUrl ? { imageUrl } : {}),
         ...(trimmedLink ? { link: trimmedLink } : {}),
       };
-      dispatch({ type: "add-comment", comment });
+
+      try {
+        const res = await fetch("/api/comments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment: baseComment }),
+        });
+        if (!res.ok) throw new Error(`Backend rejected: ${res.status}`);
+        const data = (await res.json()) as { comment: Comment };
+        dispatch({ type: "add-comment", comment: data.comment });
+        setStatus("sent");
+      } catch (err) {
+        setStatus("error");
+        setErrorMsg(err instanceof Error ? err.message : "Send failed");
+        dispatch({ type: "add-comment", comment: baseComment });
+      }
+
       setMessage("");
       setImageUrl(null);
       setLink("");
@@ -250,17 +294,48 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
               <div className="flex gap-2">
                 <input
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    if (status !== "idle") {
+                      setStatus("idle");
+                      setErrorMsg("");
+                    }
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") send();
+                    if (e.key === "Enter") void send();
                   }}
                   placeholder="Add a comment…"
-                  className="h-8 flex-1 rounded-xl border border-border bg-muted/40 px-2 text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  disabled={status === "sending"}
+                  className="h-8 flex-1 rounded-xl border border-border bg-muted/40 px-2 text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
                 />
-                <Button size="icon" className="size-8" onClick={send}>
-                  <Send className="size-4" />
+                <Button
+                  size="icon"
+                  className="size-8"
+                  onClick={() => void send()}
+                  disabled={status === "sending"}
+                >
+                  {status === "sending" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : status === "sent" ? (
+                    <Check className="size-4" />
+                  ) : (
+                    <Send className="size-4" />
+                  )}
                 </Button>
               </div>
+
+              {status === "error" && (
+                <p className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="size-3.5" />
+                  {errorMsg || "Could not send. Saved locally."}
+                </p>
+              )}
+
+              {status === "sent" && (
+                <p className="text-xs text-emerald-600">
+                  Sent to the build pipeline.
+                </p>
+              )}
 
               <div className="flex gap-2">
                 <Button

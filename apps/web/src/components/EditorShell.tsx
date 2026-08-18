@@ -1,9 +1,29 @@
+import { useEffect } from "react";
+
 import { TopBar } from "./TopBar";
 import { SlideRail } from "./SlideRail";
 import { Slides } from "./Slides";
 import { PresetPanel } from "./PresetPanel";
+import { useAppDispatch } from "@/state/store";
+import type { Comment } from "@deckworks/core";
 
 export function EditorShell() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/comments")
+      .then((res) => (res.ok ? (res.json() as Promise<{ comments: Comment[] }>) : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        dispatch({ type: "hydrate-comments", comments: data.comments });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [dispatch]);
+
   return (
     <div className="flex h-full flex-col">
       <TopBar />
