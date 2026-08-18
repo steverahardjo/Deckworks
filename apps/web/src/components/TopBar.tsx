@@ -2,13 +2,14 @@ import { useState } from "react";
 import { FileText, Wand2, Loader2 } from "lucide-react";
 
 import { ExportMenu } from "./ExportMenu";
+import { CommentsPanel } from "./CommentsPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppDispatch, useAppState } from "@/state/store";
 import { captureSlide } from "@/lib/captureSlide";
 
 export function TopBar() {
-  const { presentation } = useAppState();
+  const { presentation, activeSlideId } = useAppState();
   const dispatch = useAppDispatch();
   const [compiling, setCompiling] = useState(false);
   const openComments = presentation.comments.filter(
@@ -105,6 +106,8 @@ export function TopBar() {
           </span>
         )}
       </Button>
+
+      <CommentsPanel slideId={activeSlideId} />
 
       <ExportMenu />
     </header>

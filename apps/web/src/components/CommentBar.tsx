@@ -11,7 +11,6 @@ import {
   Send,
   ImagePlus,
   Link2,
-  ExternalLink,
   Loader2,
   Check,
   AlertCircle,
@@ -57,9 +56,9 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
       moved: boolean;
     } | null>(null);
 
-    const comments = presentation.comments.filter(
+    const commentCount = presentation.comments.filter(
       (c) => c.slideId === slide.id && c.status === "open"
-    );
+    ).length;
 
     useImperativeHandle(ref, () => ({
       openAt(p) {
@@ -215,7 +214,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
           <div className="w-80 rounded-2xl border border-border bg-card/95 p-3 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_24px_48px_-12px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">
-                Comments
+                Add a comment
               </span>
               <Button
                 variant="ghost"
@@ -227,44 +226,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
               </Button>
             </div>
 
-            <div className="flex max-h-48 flex-col gap-2 overflow-y-auto">
-              {comments.length === 0 ? (
-                <p className="py-2 text-sm text-foreground/70">
-                  No comments on this slide.
-                </p>
-              ) : (
-                comments.map((c) => (
-                  <div
-                    key={c.id}
-                    className="rounded-xl border border-border bg-muted/60 p-2"
-                  >
-                    {c.imageUrl && (
-                      <img
-                        src={c.imageUrl}
-                        alt=""
-                        className="mb-2 max-h-36 w-full rounded-md object-cover"
-                      />
-                    )}
-                    {c.message && (
-                      <p className="text-sm text-foreground">{c.message}</p>
-                    )}
-                    {c.link && (
-                      <a
-                        href={c.link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-1 flex items-center gap-1 break-all text-sm text-primary underline-offset-2 hover:underline"
-                      >
-                        <ExternalLink className="size-3.5 shrink-0" />
-                        {c.link}
-                      </a>
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-
-            <div className="mt-3 space-y-2">
+            <div className="space-y-2">
               {imageUrl && (
                 <div className="relative">
                   <img
@@ -324,19 +286,6 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                 </Button>
               </div>
 
-              {status === "error" && (
-                <p className="flex items-center gap-1 text-xs text-destructive">
-                  <AlertCircle className="size-3.5" />
-                  {errorMsg || "Could not send. Saved locally."}
-                </p>
-              )}
-
-              {status === "sent" && (
-                <p className="text-xs text-emerald-600">
-                  Sent to the build pipeline.
-                </p>
-              )}
-
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -367,6 +316,19 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                 className="hidden"
                 onChange={onPickImage}
               />
+
+              {status === "error" && (
+                <p className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertCircle className="size-3.5" />
+                  {errorMsg || "Could not send. Saved locally."}
+                </p>
+              )}
+
+              {status === "sent" && (
+                <p className="text-xs text-emerald-600">
+                  Sent to the build pipeline.
+                </p>
+              )}
             </div>
           </div>
         )}
@@ -385,7 +347,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
           )}
         >
           <Feather className="size-4" />
-          {comments.length}
+          {commentCount}
         </button>
       </div>
     );

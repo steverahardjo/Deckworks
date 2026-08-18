@@ -156,16 +156,16 @@ function SlideSurface({
             if (el) el.dataset.pinId = c.id;
           }}
           onClick={(e) => onPinClick(e.currentTarget)}
-          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-primary p-1 shadow-[0_4px_12px_rgba(57,100,254,0.4)]"
+          className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-primary shadow-[0_2px_10px_rgba(57,100,254,0.55)] transition-transform hover:scale-125 active:scale-95"
           style={{
             left: c.position!.x,
             top: c.position!.y,
+            width: 16,
+            height: 16,
           }}
           aria-label="Open comment"
           title="Open comment"
-        >
-          <span className="block size-2 rounded-full bg-white" />
-        </button>
+        />
       ))}
     </div>
   );
