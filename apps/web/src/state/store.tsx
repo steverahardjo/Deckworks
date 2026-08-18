@@ -18,6 +18,7 @@ export type State = {
   materials: Material[];
   selectedLook: string;
   focus: string;
+  directive: string;
 };
 
 export type Action =
@@ -31,6 +32,7 @@ export type Action =
   | { type: "remove-material"; id: string }
   | { type: "select-look"; presetId: string }
   | { type: "set-focus"; focus: string }
+  | { type: "set-directive"; directive: string }
   | { type: "build" };
 
 function reducer(state: State, action: Action): State {
@@ -97,6 +99,8 @@ function reducer(state: State, action: Action): State {
       return { ...state, selectedLook: action.presetId };
     case "set-focus":
       return { ...state, focus: action.focus };
+    case "set-directive":
+      return { ...state, directive: action.directive };
     case "build": {
       const preset = presetList.find((p) => p.id === state.selectedLook);
       return preset
@@ -113,6 +117,7 @@ const initialState: State = {
   materials: [],
   selectedLook: "consulting",
   focus: "",
+  directive: "",
 };
 
 const StateContext = createContext<State | null>(null);

@@ -1,15 +1,18 @@
+import { useState } from "react";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { useAppDispatch, useAppState } from "@/state/store";
+import { ProjectModal } from "./ProjectModal";
 
 const SLIDE_RATIO = 16 / 9;
 
 export function SlideRail() {
   const { presentation, activeSlideId } = useAppState();
   const dispatch = useAppDispatch();
+  const [projectOpen, setProjectOpen] = useState(false);
 
   return (
     <aside className="flex w-44 shrink-0 flex-col border-r">
@@ -17,10 +20,21 @@ export function SlideRail() {
         <span className="text-xs font-medium text-muted-foreground">
           Slides
         </span>
-        <Button variant="ghost" size="icon" className="size-6" aria-label="Add slide">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-6"
+          onClick={() => setProjectOpen(true)}
+          aria-label="Project changes"
+        >
           <Plus className="size-4" />
         </Button>
       </div>
+
+      <ProjectModal
+        open={projectOpen}
+        onClose={() => setProjectOpen(false)}
+      />
 
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-3 px-3 py-3">
