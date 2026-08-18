@@ -1,4 +1,5 @@
 import { ArrowRight, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppState } from "@/state/store";
@@ -9,6 +10,7 @@ import { LookCarousel } from "./LookCarousel";
 export function StarterPage() {
   const { materials, selectedLook, presets, focus } = useAppState();
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const look = presets.find((p) => p.id === selectedLook);
 
   return (
@@ -55,7 +57,10 @@ export function StarterPage() {
         <Button
           size="lg"
           className="gap-2"
-          onClick={() => dispatch({ type: "build" })}
+          onClick={() => {
+            dispatch({ type: "build" });
+            navigate("/slides");
+          }}
         >
           Build deck
           <ArrowRight className="size-4" />

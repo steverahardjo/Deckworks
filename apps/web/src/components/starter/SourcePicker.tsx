@@ -108,7 +108,7 @@ export function SourcePicker() {
       <div
         onDrop={onDrop}
         onDragOver={(e) => e.preventDefault()}
-        className="mt-4 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 bg-white/5 px-6 py-8 text-center transition-colors hover:border-white/25"
+        className="mt-4 flex flex-col items-center justify-center gap-1.5 rounded-2xl border border-dashed border-border bg-card px-6 py-8 text-center shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_8px_24px_-16px_rgba(0,0,0,0.1)] transition-colors hover:border-ring/40"
       >
         <Upload className="size-5 text-muted-foreground" />
         <p className="text-sm text-foreground">Drag & drop files here</p>
@@ -150,7 +150,7 @@ export function SourcePicker() {
               if (e.key === "Enter") submitLink();
             }}
             placeholder="https://…"
-            className="h-8 flex-1 rounded-md border border-white/15 bg-white/5 px-2 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="h-8 flex-1 rounded-xl border border-border bg-card/80 px-2 text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
           <Button size="sm" onClick={submitLink}>
             Add
@@ -171,7 +171,7 @@ export function SourcePicker() {
           {materials.map((m) => (
             <li
               key={m.id}
-              className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 py-1 pl-2.5 pr-1 text-sm"
+              className="flex items-center gap-2 rounded-full border border-border bg-card py-1 pl-2.5 pr-1 text-sm shadow-[0_1px_0_rgba(255,255,255,0.6)_inset,0_1px_2px_rgba(0,0,0,0.04)]"
             >
               <KindIcon kind={m.kind} className="size-4 text-muted-foreground" />
               <span className="max-w-[16rem] truncate">{m.name}</span>
@@ -183,7 +183,7 @@ export function SourcePicker() {
               <button
                 type="button"
                 onClick={() => dispatch({ type: "remove-material", id: m.id })}
-                className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+                className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                 aria-label={`Remove ${m.name}`}
               >
                 <X className="size-3.5" />

@@ -1,17 +1,48 @@
-import { useRef } from "react";
-import { useAppState } from "@/state/store";
+import { useEffect, useRef, useState } from "react";
+import { useAppDispatch, useAppState } from "@/state/store";
 import type { Element, Slide } from "@deckworks/core";
 import { ShadowBoundary } from "./ShadowBoundary";
 import { CommentBar, type CommentBarHandle } from "./CommentBar";
 
 export function Slides() {
   const { presentation, activeSlideId } = useAppState();
+  const dispatch = useAppDispatch();
   const slide =
     presentation.slides.find((s) => s.id === activeSlideId) ??
     presentation.slides[0];
 
   const surfaceRef = useRef<HTMLDivElement>(null);
   const commentRef = useRef<CommentBarHandle>(null);
+  const [debug, setDebug] = useState(false);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "`") {
+        e.preventDefault();
+        setDebug((d) => !d);
+        return;
+      }
+      const slides = presentation.slides;
+      if (!slides.length) return;
+      const currentIndex = slides.findIndex((s) => s.id === activeSlideId);
+      if (currentIndex === -1) return;
+
+      let nextIndex: number | null = null;
+      if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") {
+        nextIndex = Math.min(currentIndex + 1, slides.length - 1);
+      } else if (e.key === "ArrowUp" || e.key === "ArrowLeft" || e.key === "PageUp") {
+        nextIndex = Math.max(currentIndex - 1, 0);
+      }
+      if (nextIndex === null) return;
+      e.preventDefault();
+      const next = slides[nextIndex];
+      if (next && next.id !== activeSlideId) {
+        dispatch({ type: "select-slide", slideId: next.id });
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [activeSlideId, presentation.slides, dispatch]);
 
   const handleSlideDoubleClick = (e: React.MouseEvent) => {
     const surface = surfaceRef.current;
@@ -39,17 +70,37 @@ export function Slides() {
           style={{ background: presentation.theme.background }}
         >
           <ShadowBoundary>
-            {slide ? <SlideSurface slide={slide} /> : null}
+            {slide ? <SlideSurface slide={slide} debug={debug} /> : null}
           </ShadowBoundary>
         </div>
 
         {slide ? <CommentBar ref={commentRef} slide={slide} /> : null}
+
+        {debug && (
+          <div className="pointer-events-none absolute left-2 top-2 z-20 flex flex-col gap-1 rounded-lg border border-red-400/60 bg-black/70 px-2.5 py-1.5 font-mono text-[10px] leading-tight text-red-100 backdrop-blur-sm">
+            <span>
+              slide <b>{slide?.id}</b>
+            </span>
+            <span>
+              dims {presentation.dimensions.width}×{presentation.dimensions.height}
+            </span>
+            <span>
+              template <b>{presentation.template}</b>
+            </span>
+            <span>
+              bg <b>{presentation.theme.background}</b>
+            </span>
+            <span className="mt-0.5 text-red-300/80">
+              [`] toggles debug
+            </span>
+          </div>
+        )}
       </div>
     </main>
   );
 }
 
-function SlideSurface({ slide }: { slide: Slide }) {
+function SlideSurface({ slide, debug }: { slide: Slide; debug: boolean }) {
   const { presentation } = useAppState();
   const { theme, dimensions } = presentation;
 
@@ -67,13 +118,13 @@ function SlideSurface({ slide }: { slide: Slide }) {
       className="slide-surface"
     >
       {slide.elements.map((el) => (
-        <SlideElement key={el.id} element={el} />
+        <SlideElement key={el.id} element={el} debug={debug} />
       ))}
     </div>
   );
 }
 
-function SlideElement({ element }: { element: Element }) {
+function SlideElement({ element, debug }: { element: Element; debug: boolean }) {
   const { presentation } = useAppState();
   const { theme } = presentation;
 
@@ -85,21 +136,25 @@ function SlideElement({ element }: { element: Element }) {
     height: element.size.height,
   };
 
+  let content: React.ReactNode = null;
+
   switch (element.type) {
     case "title":
-      return (
+      content = (
         <div style={{ ...style, fontSize: 54, fontWeight: 700, lineHeight: 1.1 }}>
           {String(element.properties.text ?? "")}
         </div>
       );
+      break;
     case "subtitle":
-      return (
+      content = (
         <div style={{ ...style, fontSize: 28, fontWeight: 400, color: theme.muted }}>
           {String(element.properties.text ?? "")}
         </div>
       );
+      break;
     case "body":
-      return (
+      content = (
         <div
           style={{
             ...style,
@@ -112,8 +167,9 @@ function SlideElement({ element }: { element: Element }) {
           {String(element.properties.text ?? "")}
         </div>
       );
+      break;
     case "chart":
-      return (
+      content = (
         <div
           style={{
             ...style,
@@ -128,7 +184,34 @@ function SlideElement({ element }: { element: Element }) {
           Chart
         </div>
       );
-    default:
-      return null;
+      break;
   }
+
+  if (!content) return null;
+
+  return (
+    <>
+      {content}
+      {debug && (
+        <div
+          style={{ ...style, pointerEvents: "none" }}
+          className="z-10 border border-dashed border-red-400/80"
+        >
+          <span
+            style={{ left: element.position.x, top: element.position.y }}
+            className="absolute -translate-x-0 translate-y-full font-mono text-[12px] leading-none text-red-400"
+          >
+            {element.id} · {element.type}
+          </span>
+          <span
+            style={{ right: 0, bottom: 0 }}
+            className="absolute translate-x-full font-mono text-[12px] leading-none text-red-400"
+          >
+            {element.position.x},{element.position.y} {element.size.width}×
+            {element.size.height}
+          </span>
+        </div>
+      )}
+    </>
+  );
 }

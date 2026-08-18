@@ -11,13 +11,10 @@ import { presets as presetList } from "@deckworks/core";
 import { mockPresentation } from "./mockPresentation";
 import type { Material } from "./types";
 
-export type View = "start" | "editor";
-
 export type State = {
   presentation: Presentation;
   activeSlideId: string;
   presets: Preset[];
-  view: View;
   materials: Material[];
   selectedLook: string;
   focus: string;
@@ -102,13 +99,9 @@ function reducer(state: State, action: Action): State {
       return { ...state, focus: action.focus };
     case "build": {
       const preset = presetList.find((p) => p.id === state.selectedLook);
-      return {
-        ...state,
-        view: "editor",
-        presentation: preset
-          ? { ...state.presentation, theme: preset.theme, template: preset.id }
-          : state.presentation,
-      };
+      return preset
+        ? { ...state, presentation: { ...state.presentation, theme: preset.theme, template: preset.id } }
+        : state;
     }
   }
 }
@@ -117,7 +110,6 @@ const initialState: State = {
   presentation: mockPresentation,
   activeSlideId: mockPresentation.slides[0]?.id ?? "slide-01",
   presets: presetList,
-  view: "start",
   materials: [],
   selectedLook: "consulting",
   focus: "",

@@ -33,10 +33,10 @@ export function SlideRail() {
                   dispatch({ type: "select-slide", slideId: slide.id })
                 }
                 className={cn(
-                  "group flex flex-col gap-1 rounded-md border p-1.5 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]",
+                  "group flex flex-col gap-1 rounded-lg border p-1.5 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]",
                   isActive
-                    ? "border-ring/60 bg-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]"
-                    : "border-transparent hover:border-input hover:bg-muted"
+                    ? "border-ring/50 bg-card shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_8px_24px_-12px_rgba(57,100,254,0.3)]"
+                    : "border-transparent hover:border-border hover:bg-card shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_4px_12px_-12px_rgba(0,0,0,0.12)]"
                 )}
               >
                 <div

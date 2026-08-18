@@ -25,7 +25,7 @@ export function FocusInput() {
         Give the build a direction. You can change this any time.
       </p>
 
-      <div className="mt-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-2 backdrop-blur-xl transition-colors focus-within:border-white/20">
+      <div className="mt-4 flex items-center gap-2 rounded-2xl border border-border bg-card p-2 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_1px_2px_rgba(0,0,0,0.04),0_16px_40px_-16px_rgba(0,0,0,0.12)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:border-ring/40 focus-within:shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_1px_2px_rgba(0,0,0,0.04),0_16px_48px_-12px_rgba(57,100,254,0.18)]">
         <input
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -33,7 +33,7 @@ export function FocusInput() {
             if (e.key === "Enter") submit();
           }}
           placeholder="e.g. Highlight Q2 revenue growth and the go-to-market plan"
-          className="h-9 flex-1 bg-transparent px-3 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline-none"
+          className="h-9 flex-1 bg-transparent px-3 text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none"
           aria-label="Focus directive"
         />
         <Button
@@ -48,12 +48,12 @@ export function FocusInput() {
       </div>
 
       {focus && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl border border-white/10 bg-primary/10 p-3">
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-primary/15 bg-primary/5 p-3">
           <p className="text-sm text-foreground">{focus}</p>
           <button
             type="button"
             onClick={() => dispatch({ type: "set-focus", focus: "" })}
-            className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-white/10 hover:text-foreground"
+            className="ml-auto shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
             aria-label="Clear focus"
           >
             <X className="size-4" />

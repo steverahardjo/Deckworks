@@ -19,7 +19,7 @@ export function PresetPanel() {
     <div className="absolute bottom-4 right-4 z-10">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 rounded-full border border-white/10 bg-popover/70 px-3 py-2 text-sm font-medium text-foreground shadow-[0_12px_40px_-16px_rgba(0,0,0,0.6)] backdrop-blur-xl transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:bg-popover/90 active:scale-[0.98]">
+          <button className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_12px_32px_-12px_rgba(0,0,0,0.18)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_16px_40px_-12px_rgba(0,0,0,0.22)] active:scale-[0.98]">
             <span
               className="size-3 shrink-0 rounded-full border"
               style={{

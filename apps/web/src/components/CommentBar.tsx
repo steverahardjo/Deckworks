@@ -168,7 +168,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
         style={{ left: pos.x, top: pos.y }}
       >
         {open && (
-          <div className="w-80 rounded-lg border border-white/10 bg-background/40 p-3 shadow-lg backdrop-blur-xl">
+          <div className="w-80 rounded-2xl border border-border bg-card/95 p-3 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_24px_48px_-12px_rgba(0,0,0,0.18)] backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">
                 Comments
@@ -192,7 +192,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                 comments.map((c) => (
                   <div
                     key={c.id}
-                    className="rounded-md border border-white/10 bg-white/5 p-2"
+                    className="rounded-xl border border-border bg-muted/60 p-2"
                   >
                     {c.imageUrl && (
                       <img
@@ -226,7 +226,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   <img
                     src={imageUrl}
                     alt="Attachment preview"
-                    className="max-h-24 w-full rounded-md border border-white/10 object-cover"
+                    className="max-h-24 w-full rounded-md border border-border object-cover"
                   />
                   <button
                     type="button"
@@ -243,7 +243,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                   placeholder="Paste a web link…"
-                  className="h-8 w-full rounded-md border border-white/15 bg-white/5 px-2 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-8 w-full rounded-xl border border-border bg-muted/40 px-2 text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
               )}
 
@@ -255,7 +255,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                     if (e.key === "Enter") send();
                   }}
                   placeholder="Add a comment…"
-                  className="h-8 flex-1 rounded-md border border-white/15 bg-white/5 px-2 text-sm text-foreground placeholder:text-foreground/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-8 flex-1 rounded-xl border border-border bg-muted/40 px-2 text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
                 <Button size="icon" className="size-8" onClick={send}>
                   <Send className="size-4" />
@@ -267,7 +267,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 gap-1.5 border border-white/10 bg-white/5 px-2 text-xs text-foreground/80"
+                  className="h-7 gap-1.5 border border-border bg-muted/40 px-2 text-xs text-foreground/80"
                   onClick={() => fileRef.current?.click()}
                 >
                   <ImagePlus className="size-3.5" />
@@ -277,7 +277,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 gap-1.5 border border-white/10 bg-white/5 px-2 text-xs text-foreground/80"
+                  className="h-7 gap-1.5 border border-border bg-muted/40 px-2 text-xs text-foreground/80"
                   onClick={() => setShowLink((v) => !v)}
                 >
                   <Link2 className="size-3.5" />
@@ -305,8 +305,8 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
             dragRef.current = null;
           }}
           className={cn(
-            "flex cursor-grab items-center gap-2 rounded-full border border-white/10 bg-background/30 px-3 py-2 text-sm font-medium text-foreground shadow-lg backdrop-blur-lg transition-colors hover:bg-background/50 active:cursor-grabbing",
-            open && "bg-primary/70 text-primary-foreground hover:bg-primary/80"
+            "flex cursor-grab items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_12px_32px_-12px_rgba(0,0,0,0.16)] transition-colors hover:shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_16px_40px_-12px_rgba(0,0,0,0.2)] active:cursor-grabbing",
+            open && "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
         >
           <Feather className="size-4" />

@@ -68,7 +68,7 @@ export const themes = {
   },
   mckinsey: {
     id: "mckinsey",
-    name: "M&k&ns*y",
+    name: "M*k*ns*y",
     background: "#ffffff",
     foreground: "#051c2c",
     accent: "#2251ff",
@@ -77,7 +77,7 @@ export const themes = {
   },
   deloitte: {
     id: "deloitte",
-    name: "D&lo*tt&",
+    name: "D*lo*tt*",
     background: "#ffffff",
     foreground: "#000000",
     accent: "#86bc25",
@@ -112,8 +112,8 @@ export const presets: Preset[] = [
   { id: "editorial", name: "Editorial", theme: themes.editorial },
   { id: "academic", name: "Academic", theme: themes.academic },
   { id: "startup", name: "Startup", theme: themes.startup },
-  { id: "mckinsey", name: "M&k&ns*y", theme: themes.mckinsey },
-  { id: "deloitte", name: "D&lo*tt&", theme: themes.deloitte },
+  { id: "mckinsey", name: "M*k*ns*y", theme: themes.mckinsey },
+  { id: "deloitte", name: "D*lo*tt*", theme: themes.deloitte },
   { id: "c4e", name: "C4e", theme: themes.c4e },
   { id: "travel", name: "Travel", theme: themes.travel },
 ];

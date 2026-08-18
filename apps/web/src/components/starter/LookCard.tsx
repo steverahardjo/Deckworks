@@ -17,10 +17,10 @@ export function LookCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "flex w-56 shrink-0 flex-col gap-2 rounded-xl border p-2 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]",
+        "flex w-56 shrink-0 flex-col gap-2 rounded-2xl border p-2 text-left transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-[0.98]",
         selected
-          ? "border-ring bg-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
-          : "border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10"
+          ? "border-ring/70 bg-card shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_16px_40px_-16px_rgba(57,100,254,0.25)]"
+          : "border-border bg-card shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_8px_24px_-16px_rgba(0,0,0,0.12)] hover:border-ring/40 hover:shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_16px_40px_-16px_rgba(0,0,0,0.16)]"
       )}
     >
       <div
@@ -41,23 +41,20 @@ export function LookCard({
 
 function Preview({ theme }: { theme: Theme }) {
   return (
-    <div className="flex h-full flex-col justify-center gap-2 px-4">
+    <div
+      className="flex h-full flex-col justify-center px-4"
+      style={{ fontFamily: theme.font }}
+    >
       <div
-        className="h-1.5 w-2/3 rounded-sm"
-        style={{ background: theme.foreground, opacity: 0.85 }}
-      />
-      <div className="h-1 w-1/2 rounded-sm" style={{ background: theme.muted }} />
-      <div className="mt-2 h-px w-full" style={{ background: theme.accent }} />
-      <div className="flex gap-2">
-        <div
-          className="h-8 flex-1 rounded-sm"
-          style={{ background: theme.accent, opacity: 0.25 }}
-        />
-        <div
-          className="h-8 flex-1 rounded-sm"
-          style={{ background: theme.accent, opacity: 0.15 }}
-        />
+        className="text-[15px] font-bold leading-tight"
+        style={{ color: theme.foreground }}
+      >
+        Quarterly Business Review
       </div>
+      <div className="mt-1.5 text-[10px]" style={{ color: theme.muted }}>
+        Q2 FY2026 · Product & GTM
+      </div>
+      <div className="mt-3 h-0.5 w-10 rounded-full" style={{ background: theme.accent }} />
     </div>
   );
 }
