@@ -1,4 +1,4 @@
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "@phosphor-icons/react";
 import { useNavigate } from "react-router-dom";
 
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,18 @@ import { useAppDispatch, useAppState } from "@/state/store";
 import { FocusInput } from "./FocusInput";
 import { SourcePicker } from "./SourcePicker";
 import { LookCarousel } from "./LookCarousel";
+
+function SectionLabel({ index, title }: { index: string; title: string }) {
+  return (
+    <div className="flex items-baseline gap-3">
+      <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ring">
+        {index}
+      </span>
+      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+      <span className="h-px flex-1 self-center bg-border" aria-hidden />
+    </div>
+  );
+}
 
 export function StarterPage() {
   const { materials, selectedLook, presets, focus } = useAppState();
@@ -15,44 +27,60 @@ export function StarterPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <Sparkles className="size-4" />
-          <span className="text-xs font-medium uppercase tracking-wider">
+      <header className="flex h-14 shrink-0 items-center gap-3 border-b px-6">
+        <div className="flex items-center gap-2.5">
+          <span className="grid size-6 place-items-center rounded-[4px] bg-primary text-[10px] font-bold text-primary-foreground">
+            D
+          </span>
+          <span className="font-mono text-xs font-medium uppercase tracking-[0.22em] text-foreground">
             Deckworks
           </span>
         </div>
+        <span className="ml-auto hidden rounded-md border border-border bg-card px-2 py-1 font-mono text-[11px] text-muted-foreground sm:inline">
+          agent-native slides
+        </span>
       </header>
 
       <div className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-4xl px-8 py-10">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            Build your presentation
-          </h1>
-          <p className="mt-2 max-w-2xl text-muted-foreground">
-            Add source material and pick a look. Deckworks turns it into a slide
-            deck.
-          </p>
-
-          <div className="mt-8">
-            <FocusInput />
+        <div className="mx-auto max-w-3xl px-6 py-20 sm:py-28">
+          <div className="rise-in" style={{ "--index": 0 } as React.CSSProperties}>
+            <p className="font-mono text-[11px] uppercase tracking-[0.22em] text-ring">
+              From material to deck
+            </p>
+            <h1 className="mt-4 max-w-xl font-serif text-5xl font-medium leading-[1.05] tracking-[-0.02em] sm:text-6xl">
+              Build the deck you&rsquo;ll actually present.
+            </h1>
+            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted-foreground">
+              Add your source material, give the build a direction, and pick a
+              look. Deckworks composes the slides, and you refine them with
+              comments.
+            </p>
           </div>
 
-          <div className="mt-10">
-            <SourcePicker />
-          </div>
+          <div className="mt-16 space-y-14">
+            <section className="rise-in space-y-4" style={{ "--index": 1 } as React.CSSProperties}>
+              <SectionLabel index="01" title="Direction" />
+              <FocusInput />
+            </section>
 
-          <div className="mt-10">
-            <LookCarousel />
+            <section className="rise-in space-y-4" style={{ "--index": 2 } as React.CSSProperties}>
+              <SectionLabel index="02" title="Material" />
+              <SourcePicker />
+            </section>
+
+            <section className="rise-in space-y-4" style={{ "--index": 3 } as React.CSSProperties}>
+              <SectionLabel index="03" title="Look" />
+              <LookCarousel />
+            </section>
           </div>
         </div>
       </div>
 
-      <footer className="flex shrink-0 items-center justify-between border-t px-8 py-4">
-        <p className="text-sm text-muted-foreground">
-          {materials.length} material{materials.length === 1 ? "" : "s"} ·{" "}
-          {look?.name ?? "No"} look
-          {focus ? " · focus set" : ""}
+      <footer className="flex shrink-0 items-center justify-between border-t px-6 py-4">
+        <p className="font-mono text-xs text-muted-foreground">
+          {materials.length} material{materials.length === 1 ? "" : "s"} /{" "}
+          {look?.name ?? "no"} look
+          {focus ? " / focus set" : ""}
         </p>
         <Button
           size="lg"
@@ -63,7 +91,7 @@ export function StarterPage() {
           }}
         >
           Build deck
-          <ArrowRight className="size-4" />
+          <ArrowRight size={16} weight="bold" />
         </Button>
       </footer>
     </div>

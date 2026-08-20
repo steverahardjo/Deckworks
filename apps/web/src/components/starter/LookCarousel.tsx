@@ -1,5 +1,5 @@
 import { useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppState } from "@/state/store";
@@ -17,22 +17,19 @@ export function LookCarousel() {
   };
 
   return (
-    <section>
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight">Choose a look</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Scroll to preview how your deck will feel.
-          </p>
-        </div>
-        <div className="flex gap-2">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="max-w-md text-sm text-muted-foreground">
+          Scroll to preview how your deck will feel.
+        </p>
+        <div className="flex gap-1.5">
           <Button
             variant="outline"
             size="icon"
             aria-label="Scroll looks left"
             onClick={() => scrollBy(-1)}
           >
-            <ChevronLeft className="size-4" />
+            <CaretLeft size={15} />
           </Button>
           <Button
             variant="outline"
@@ -40,14 +37,14 @@ export function LookCarousel() {
             aria-label="Scroll looks right"
             onClick={() => scrollBy(1)}
           >
-            <ChevronRight className="size-4" />
+            <CaretRight size={15} />
           </Button>
         </div>
       </div>
 
       <div
         ref={scrollRef}
-        className="no-scrollbar mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2"
+        className="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2"
       >
         {presets.map((preset) => (
           <div key={preset.id} className="snap-start">
@@ -61,6 +58,6 @@ export function LookCarousel() {
           </div>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, Wand2, Loader2 } from "lucide-react";
+import { MagicWand, CircleNotch } from "@phosphor-icons/react";
 
 import { ExportMenu } from "./ExportMenu";
 import { CommentsPanel } from "./CommentsPanel";
@@ -66,9 +66,11 @@ export function TopBar() {
 
   return (
     <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <FileText className="size-4" />
-        <span className="text-xs font-medium uppercase tracking-wider">
+      <div className="flex items-center gap-2.5 text-muted-foreground">
+        <span className="grid size-6 place-items-center rounded-[4px] bg-primary text-[10px] font-bold text-primary-foreground">
+          D
+        </span>
+        <span className="font-mono text-xs font-medium uppercase tracking-[0.22em] text-foreground">
           Deckworks
         </span>
       </div>
@@ -95,9 +97,9 @@ export function TopBar() {
         }
       >
         {compiling ? (
-          <Loader2 className="size-4 animate-spin" />
+          <CircleNotch size={16} className="animate-spin" />
         ) : (
-          <Wand2 className="size-4" />
+          <MagicWand size={16} />
         )}
         Compile
         {openComments > 0 && (

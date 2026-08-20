@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  MessageSquare,
+  ChatCircle,
   X,
-  ExternalLink,
-  CheckCircle2,
-} from "lucide-react";
+  ArrowSquareOut,
+  CheckCircle,
+} from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { useAppDispatch, useAppState } from "@/state/store";
@@ -49,7 +49,7 @@ export function CommentsPanel({ slideId }: { slideId: string }) {
         className="gap-2"
         onClick={() => setOpen((v) => !v)}
       >
-        <MessageSquare className="size-4" />
+        <ChatCircle size={16} />
         Comment
         {comments.length > 0 && (
           <span className="rounded-full bg-background/20 px-1.5 text-xs tabular-nums">
@@ -59,7 +59,7 @@ export function CommentsPanel({ slideId }: { slideId: string }) {
       </Button>
 
       {open && (
-        <div className="absolute right-0 top-full z-30 mt-2 w-96 rounded-2xl border border-border bg-card/95 p-3 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_24px_48px_-12px_rgba(0,0,0,0.2)] backdrop-blur-xl">
+        <div className="absolute right-0 top-full z-30 mt-2 w-96 rounded-lg border border-border bg-card/95 p-3 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.25)] backdrop-blur-xl">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-sm font-medium text-foreground">
               Comments on this page
@@ -67,29 +67,29 @@ export function CommentsPanel({ slideId }: { slideId: string }) {
             <Button
               variant="ghost"
               size="icon"
-              className="size-6 text-foreground/70"
+              className="size-6 text-muted-foreground"
               onClick={() => setOpen(false)}
             >
-              <X className="size-4" />
+              <X size={14} />
             </Button>
           </div>
 
           <div className="flex max-h-80 flex-col gap-2 overflow-y-auto">
             {comments.length === 0 ? (
-              <p className="py-3 text-center text-sm text-foreground/70">
+              <p className="py-3 text-center text-sm text-muted-foreground">
                 No comments on this page yet.
               </p>
             ) : (
               comments.map((c) => (
                 <div
                   key={c.id}
-                  className="rounded-xl border border-border bg-muted/60 p-2"
+                  className="rounded-md border border-border bg-muted/60 p-2"
                 >
                   {c.imageUrl && (
                     <img
                       src={c.imageUrl}
                       alt=""
-                      className="mb-2 max-h-36 w-full rounded-md object-cover"
+                      className="mb-2 max-h-36 w-full rounded-[4px] object-cover"
                     />
                   )}
                   {c.message && (
@@ -100,14 +100,14 @@ export function CommentsPanel({ slideId }: { slideId: string }) {
                       href={c.link}
                       target="_blank"
                       rel="noreferrer"
-                      className="mt-1 flex items-center gap-1 break-all text-sm text-primary underline-offset-2 hover:underline"
+                      className="mt-1 flex items-center gap-1 break-all text-sm text-ring underline-offset-2 hover:underline"
                     >
-                      <ExternalLink className="size-3.5 shrink-0" />
+                      <ArrowSquareOut size={14} className="shrink-0" />
                       {c.link}
                     </a>
                   )}
                   {c.position && (
-                    <p className="mt-1 text-[11px] text-muted-foreground">
+                    <p className="mt-1 font-mono text-[10px] text-muted-foreground">
                       at {c.position.x}, {c.position.y}
                     </p>
                   )}
@@ -118,12 +118,12 @@ export function CommentsPanel({ slideId }: { slideId: string }) {
                       className="mt-1.5 h-6 gap-1 px-2 text-[11px] text-foreground/80"
                       onClick={() => resolve(c)}
                     >
-                      <CheckCircle2 className="size-3.5" />
+                      <CheckCircle size={13} />
                       Resolve
                     </Button>
                   ) : (
-                    <p className="mt-1.5 flex items-center gap-1 text-[11px] text-emerald-600">
-                      <CheckCircle2 className="size-3.5" />
+                    <p className="mt-1.5 flex items-center gap-1 text-[11px] text-ring">
+                      <CheckCircle size={13} />
                       Resolved
                     </p>
                   )}

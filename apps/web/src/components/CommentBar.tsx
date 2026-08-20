@@ -8,13 +8,13 @@ import {
 import {
   Feather,
   X,
-  Send,
-  ImagePlus,
-  Link2,
-  Loader2,
+  PaperPlaneTilt,
+  ImageSquare,
+  Link,
+  CircleNotch,
   Check,
-  AlertCircle,
-} from "lucide-react";
+  WarningCircle,
+} from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -211,7 +211,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
         style={{ left: pos.x, top: pos.y }}
       >
         {open && (
-          <div className="w-80 rounded-2xl border border-border bg-card/95 p-3 shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_24px_48px_-12px_rgba(0,0,0,0.18)] backdrop-blur-xl">
+          <div className="w-80 rounded-lg border border-border bg-card/95 p-3 shadow-[0_24px_48px_-24px_rgba(0,0,0,0.25)] backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">
                 Add a comment
@@ -219,10 +219,10 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-6 text-foreground/70"
+                className="size-6 text-muted-foreground"
                 onClick={() => setOpen(false)}
               >
-                <X className="size-4" />
+                <X size={14} />
               </Button>
             </div>
 
@@ -232,14 +232,14 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   <img
                     src={imageUrl}
                     alt="Attachment preview"
-                    className="max-h-24 w-full rounded-md border border-border object-cover"
+                    className="max-h-24 w-full rounded-[4px] border border-border object-cover"
                   />
                   <button
                     type="button"
                     onClick={() => setImageUrl(null)}
                     className="absolute right-1 top-1 rounded-full bg-black/60 p-1 text-foreground hover:bg-black/80"
                   >
-                    <X className="size-3" />
+                    <X size={12} />
                   </button>
                 </div>
               )}
@@ -249,7 +249,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   value={link}
                   onChange={(e) => setLink(e.target.value)}
                   placeholder="Paste a web link…"
-                  className="h-8 w-full rounded-xl border border-border bg-muted/40 px-2 text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  className="h-8 w-full rounded-md border border-input bg-muted/40 px-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
               )}
 
@@ -268,7 +268,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   }}
                   placeholder="Add a comment…"
                   disabled={status === "sending"}
-                  className="h-8 flex-1 rounded-xl border border-border bg-muted/40 px-2 text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
+                  className="h-8 flex-1 rounded-md border border-input bg-muted/40 px-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
                 />
                 <Button
                   size="icon"
@@ -277,11 +277,11 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   disabled={status === "sending"}
                 >
                   {status === "sending" ? (
-                    <Loader2 className="size-4 animate-spin" />
+                    <CircleNotch size={15} className="animate-spin" />
                   ) : status === "sent" ? (
-                    <Check className="size-4" />
+                    <Check size={15} weight="bold" />
                   ) : (
-                    <Send className="size-4" />
+                    <PaperPlaneTilt size={15} weight="bold" />
                   )}
                 </Button>
               </div>
@@ -291,20 +291,20 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 gap-1.5 border border-border bg-muted/40 px-2 text-xs text-foreground/80"
+                  className="h-7 gap-1.5 border border-border bg-muted/40 px-2 text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => fileRef.current?.click()}
                 >
-                  <ImagePlus className="size-3.5" />
+                  <ImageSquare size={14} />
                   Image
                 </Button>
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 gap-1.5 border border-border bg-muted/40 px-2 text-xs text-foreground/80"
+                  className="h-7 gap-1.5 border border-border bg-muted/40 px-2 text-xs text-muted-foreground hover:text-foreground"
                   onClick={() => setShowLink((v) => !v)}
                 >
-                  <Link2 className="size-3.5" />
+                  <Link size={14} />
                   Link
                 </Button>
               </div>
@@ -319,13 +319,13 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
 
               {status === "error" && (
                 <p className="flex items-center gap-1 text-xs text-destructive">
-                  <AlertCircle className="size-3.5" />
+                  <WarningCircle size={13} />
                   {errorMsg || "Could not send. Saved locally."}
                 </p>
               )}
 
               {status === "sent" && (
-                <p className="text-xs text-emerald-600">
+                <p className="text-xs text-ring">
                   Sent to the build pipeline.
                 </p>
               )}
@@ -342,11 +342,11 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: Slide }>(
             dragRef.current = null;
           }}
           className={cn(
-            "flex cursor-grab items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_12px_32px_-12px_rgba(0,0,0,0.16)] transition-colors hover:shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_16px_40px_-12px_rgba(0,0,0,0.2)] active:cursor-grabbing",
+            "flex cursor-grab items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-[0_4px_16px_-8px_rgba(0,0,0,0.12)] transition-colors hover:border-ring/40 active:cursor-grabbing",
             open && "bg-primary text-primary-foreground hover:bg-primary/90"
           )}
         >
-          <Feather className="size-4" />
+          <Feather size={15} />
           {commentCount}
         </button>
       </div>

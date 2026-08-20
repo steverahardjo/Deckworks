@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react";
+import { Check, CaretRight, Circle } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 
@@ -40,7 +40,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          "z-50 min-w-[8rem] overflow-hidden rounded-xl border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_0_rgba(0,0,0,0.08)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
+          "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.12)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95",
           className
         )}
         {...props}
@@ -81,7 +81,7 @@ function DropdownMenuLabel({
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        "px-2 py-1.5 text-sm font-medium data-[inset]:pl-8",
+        "px-2 py-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground data-[inset]:pl-8",
         className
       )}
       {...props}
@@ -127,7 +127,7 @@ function DropdownMenuSubTrigger({
       {...props}
     >
       {children}
-      <ChevronRightIcon className="ml-auto size-4" />
+      <CaretRight className="ml-auto" />
     </DropdownMenuPrimitive.SubTrigger>
   );
 }
@@ -140,7 +140,7 @@ function DropdownMenuSubContent({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-md data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
+        "z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover p-1 text-popover-foreground shadow-[0_12px_32px_-8px_rgba(0,0,0,0.12)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
         className
       )}
       {...props}
@@ -166,7 +166,7 @@ function DropdownMenuCheckboxItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
+          <Check className="size-4" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}
@@ -201,7 +201,7 @@ function DropdownMenuRadioItem({
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
         <DropdownMenuPrimitive.ItemIndicator>
-          <CircleIcon className="size-2 fill-current" />
+          <Circle className="size-2 fill-current" />
         </DropdownMenuPrimitive.ItemIndicator>
       </span>
       {children}

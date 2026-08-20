@@ -3,48 +3,48 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f5f6f7;
-  --foreground: #1e232c;
+  --background: #f7f6f3;
+  --foreground: #1c1917;
   --card: #ffffff;
-  --card-foreground: #1e232c;
+  --card-foreground: #1c1917;
   --popover: #ffffff;
-  --popover-foreground: #1e232c;
-  --primary: #3964fe;
-  --primary-foreground: #ffffff;
-  --secondary: #e9ecf2;
-  --secondary-foreground: #353638;
-  --muted: #f1f3f5;
-  --muted-foreground: #61666b;
-  --accent: #ebeef2;
-  --accent-foreground: #152443;
-  --destructive: #ec1313;
-  --destructive-foreground: #ffffff;
-  --border: rgba(20, 22, 26, 0.1);
-  --input: rgba(20, 22, 26, 0.16);
-  --ring: #3964fe;
-  --radius: 1rem;
+  --popover-foreground: #1c1917;
+  --primary: #1c1917;
+  --primary-foreground: #fdfcfb;
+  --secondary: #efeee9;
+  --secondary-foreground: #1c1917;
+  --muted: #f1f0eb;
+  --muted-foreground: #7a756c;
+  --accent: #efeee9;
+  --accent-foreground: #1c1917;
+  --destructive: #9f2f2d;
+  --destructive-foreground: #fdfcfb;
+  --border: #e8e6df;
+  --input: #d9d6cd;
+  --ring: #b07c33;
+  --radius: 0.5rem;
 }
 
 .dark {
-  --background: #151517;
-  --foreground: #f9fafb;
-  --card: #232324;
-  --card-foreground: #f9fafb;
-  --popover: #2c2c2e;
-  --popover-foreground: #f9fafb;
-  --primary: #5686fe;
-  --primary-foreground: #0f1115;
-  --secondary: #2c2c2e;
-  --secondary-foreground: #cfd3d6;
-  --muted: #232324;
-  --muted-foreground: #adb2b8;
-  --accent: #2c2c2e;
-  --accent-foreground: #f9fafb;
-  --destructive: #f25a5a;
-  --destructive-foreground: #ffffff;
-  --border: hsla(0, 0%, 100%, 0.12);
-  --input: hsla(0, 0%, 100%, 0.16);
-  --ring: #5686fe;
+  --background: #141311;
+  --foreground: #f3f1ec;
+  --card: #1d1b18;
+  --card-foreground: #f3f1ec;
+  --popover: #23211d;
+  --popover-foreground: #f3f1ec;
+  --primary: #f3f1ec;
+  --primary-foreground: #1c1917;
+  --secondary: #2a2824;
+  --secondary-foreground: #e7e4dd;
+  --muted: #23211d;
+  --muted-foreground: #a49e92;
+  --accent: #2a2824;
+  --accent-foreground: #f3f1ec;
+  --destructive: #e5484d;
+  --destructive-foreground: #fdfcfb;
+  --border: #2f2c27;
+  --input: #3b382f;
+  --ring: #d9a75c;
 }
 
 @theme inline {
@@ -68,18 +68,21 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 8px);
 
   --font-sans:
-    "Anthropic Sans Text", "Inter Variable", Inter, -apple-system,
+    "Anthropic Sans Text", "Helvetica Neue", -apple-system,
     BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-
   --font-humanist:
-    "Anthropic Sans Text", "Inter Variable", Inter, -apple-system,
+    "Anthropic Sans Text", "Helvetica Neue", -apple-system,
     BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: "Newsreader Variable", Georgia, "Times New Roman", serif;
+  --font-mono:
+    "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, Consolas,
+    monospace;
 }
 
 @layer base {
@@ -94,19 +97,30 @@
   body {
     margin: 0;
     background-color: var(--background);
-    background-image: linear-gradient(
-      180deg,
-      #9cc1e7 0%,
-      rgba(245, 246, 247, 0) 100%
+    background-image: radial-gradient(
+      90rem 32rem at 50% -8rem,
+      rgba(176, 124, 51, 0.05),
+      rgba(176, 124, 51, 0) 60%
     );
+    background-repeat: no-repeat;
     color: var(--foreground);
     font-family: var(--font-humanist);
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow: hidden;
   }
   .font-humanist {
     font-family: var(--font-humanist);
+  }
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+  ::selection {
+    background: rgba(176, 124, 51, 0.2);
   }
 }
 
@@ -115,6 +129,23 @@
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* Scroll-entry reveal: fade + rise, driven by --index for cascade. */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.rise-in {
+  opacity: 0;
+  animation: rise-in 600ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: calc(var(--index, 0) * 80ms);
 }
 
 @font-face {

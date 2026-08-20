@@ -1,4 +1,4 @@
-import { Check, ChevronDown } from "lucide-react";
+import { Check, CaretDown } from "@phosphor-icons/react";
 
 import {
   DropdownMenu,
@@ -19,7 +19,7 @@ export function PresetPanel() {
     <div className="absolute bottom-4 right-4 z-10">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_12px_32px_-12px_rgba(0,0,0,0.18)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:shadow-[0_1px_0_rgba(255,255,255,0.7)_inset,0_16px_40px_-12px_rgba(0,0,0,0.22)] active:scale-[0.98]">
+          <button className="flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2 text-sm font-medium text-foreground shadow-[0_4px_16px_-8px_rgba(0,0,0,0.12)] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] hover:border-ring/40 active:scale-[0.98]">
             <span
               className="size-3 shrink-0 rounded-full border"
               style={{
@@ -28,10 +28,10 @@ export function PresetPanel() {
               }}
             />
             {active?.name ?? "Theme"}
-            <ChevronDown className="size-4 text-muted-foreground" />
+            <CaretDown size={14} className="text-muted-foreground" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
+        <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel>Theme</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {presets.map((preset) => {
@@ -51,7 +51,7 @@ export function PresetPanel() {
                   }}
                 />
                 {preset.name}
-                {isActive && <Check className="ml-auto size-4 text-primary" />}
+                {isActive && <Check size={14} className="ml-auto text-ring" />}
               </DropdownMenuItem>
             );
           })}

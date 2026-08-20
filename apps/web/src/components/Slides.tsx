@@ -68,7 +68,7 @@ export function Slides() {
   return (
     <main className="relative flex flex-1 items-center justify-center overflow-hidden bg-background p-6">
       <div
-        className="relative max-h-full max-w-full shadow-[0_24px_70px_-24px_rgba(0,0,0,0.55)]"
+        className="relative max-h-full max-w-full shadow-[0_24px_60px_-28px_rgba(0,0,0,0.35)]"
         style={{
           aspectRatio: `${presentation.dimensions.width} / ${presentation.dimensions.height}`,
           height: "min(100%, calc((100vw - 22rem) * 9 / 16))",

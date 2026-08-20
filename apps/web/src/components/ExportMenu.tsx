@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileDown, Loader2 } from "lucide-react";
+import { FileArrowDown, CircleNotch } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { FileTypeIcon } from "./FileTypeIcon";
@@ -57,9 +57,9 @@ export function ExportMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2" disabled={busy !== null}>
           {busy ? (
-            <Loader2 className="size-4 animate-spin" />
+            <CircleNotch size={16} className="animate-spin" />
           ) : (
-            <FileDown className="size-4" />
+            <FileArrowDown size={16} />
           )}
           Export
         </Button>
