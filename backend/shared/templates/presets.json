@@ -1,0 +1,61 @@
+{
+  "$comment": "Generated from packages/core/src/presets.ts (via git HEAD~1). Single source of truth for theme templates; consumed by local TS, remote Python, and the frontend. font uses the shared Anthropic Sans stack.",
+  "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif",
+  "presets": [
+    {
+      "id": "minimal",
+      "name": "Minimal",
+      "theme": { "id": "minimal", "name": "Minimal", "background": "#fafafa", "foreground": "#18181b", "accent": "#18181b", "muted": "#71717a", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "consulting",
+      "name": "Consulting",
+      "theme": { "id": "consulting", "name": "Consulting", "background": "#ffffff", "foreground": "#0f172a", "accent": "#2563eb", "muted": "#64748b", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "corporate",
+      "name": "Corporate",
+      "theme": { "id": "corporate", "name": "Corporate", "background": "#ffffff", "foreground": "#1e293b", "accent": "#0f766e", "muted": "#64748b", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "dark",
+      "name": "Dark",
+      "theme": { "id": "dark", "name": "Dark", "background": "#0b0f1a", "foreground": "#e5e7eb", "accent": "#8b5cf6", "muted": "#94a3b8", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "editorial",
+      "name": "Editorial",
+      "theme": { "id": "editorial", "name": "Editorial", "background": "#f7f3ec", "foreground": "#1c1917", "accent": "#8a5a2b", "muted": "#78716c", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "academic",
+      "name": "Academic",
+      "theme": { "id": "academic", "name": "Academic", "background": "#ffffff", "foreground": "#0f1e3d", "accent": "#1d4ed8", "muted": "#64748b", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "startup",
+      "name": "Startup",
+      "theme": { "id": "startup", "name": "Startup", "background": "#0b1220", "foreground": "#e6edf7", "accent": "#14b8a6", "muted": "#8aa0b8", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "mckinsey",
+      "name": "M*k*ns*y",
+      "theme": { "id": "mckinsey", "name": "M*k*ns*y", "background": "#ffffff", "foreground": "#051c2c", "accent": "#2251ff", "muted": "#4e5b66", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "deloitte",
+      "name": "D*lo*tt*",
+      "theme": { "id": "deloitte", "name": "D*lo*tt*", "background": "#ffffff", "foreground": "#000000", "accent": "#86bc25", "muted": "#53565a", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "c4e",
+      "name": "C4e",
+      "theme": { "id": "c4e", "name": "C4e", "background": "#ffffff", "foreground": "#0b0b0b", "accent": "#0000dc", "muted": "#5a5a5a", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    },
+    {
+      "id": "travel",
+      "name": "Travel",
+      "theme": { "id": "travel", "name": "Travel", "background": "#f5f7ee", "foreground": "#1e3a2f", "accent": "#43a047", "muted": "#5c6f62", "font": "\"Anthropic Sans Text\", \"Inter Variable\", Inter, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif" }
+    }
+  ]
+}
