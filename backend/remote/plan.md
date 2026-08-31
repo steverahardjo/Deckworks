@@ -22,12 +22,13 @@ backend/remote/
   pyproject.toml              # fastapi, vercel-sandbox, asyncpg, boto3, weasyprint
   .python-version             # 3.13
   src/remote/
-    config.py                 # env: DATABASE_URL, S3_ENDPOINT/BUCKET/keys, Vercel creds
-    schema.py                 # Pydantic mirrors of deck.json (Presentation/Slide/Element/Theme/Comment/Preset)
-    store.py                  # Postgres (deck.json) + S3-compatible object store (assets) + snapshot helpers
+    config.py                 # env: DATABASE_URL, S3_ENDPOINT/BUCKET/keys, Vercel creds, AUTH_* secrets
+    schema.py                 # Pydantic mirrors of deck.json (Presentation/Slide/Element/Theme/Comment/Preset) + auth request models
+    store.py                  # Postgres (deck.json) + S3-compatible object store (assets) + snapshot helpers + project store
+    auth.py                   # JWT access/refresh tokens, Argon2 hashing, OAuth (github/google), user/refresh/oauth-state stores
     isolation.py              # FIX stub → sandbox code runner (run_code)
     export.py                 # render_deck_html(presentation) + export_pdf (pandoc)
-    main.py                   # FastAPI app (routes)
+    main.py                   # FastAPI app (auth + deck routes)
 ```
 
 ## Persistence model (decided)
@@ -71,6 +72,32 @@ Mechanics (verified against `vercel-sandbox 0.4.0` SDK):
 | `POST` | `/projects/{id}/export` | `{ format, presentation }` | file bytes (html/pdf, 501 pptx) |
 | `POST` | `/projects/{id}/run` | `{ code, files? }` | `{ stdout, stderr, files }` |
 
+All deck routes above require a bearer access token, and every project is scoped to its owner
+(accessing another user's project → 403).
+
+## Auth (`auth.py` — implemented)
+
+Email/password + OAuth (GitHub, Google), JWT bearer tokens with rotating refresh.
+
+| Method | Route | Body | Returns |
+| --- | --- | --- | --- |
+| `POST` | `/auth/register` | `{ email, password, name }` | `{ access_token, refresh_token, expires_in, user }` |
+| `POST` | `/auth/login` | `{ email, password }` | token pair |
+| `POST` | `/auth/refresh` | `{ refresh_token }` | rotated token pair (old refresh revoked) |
+| `POST` | `/auth/logout` | `{ refresh_token }` (auth) | revokes the refresh token |
+| `GET` | `/auth/me` | — (auth) | current user |
+| `GET` | `/auth/oauth/{provider}/authorize` | — | 307 → provider (state stored) |
+| `GET` | `/auth/oauth/{provider}/callback` | `?code&state` | token pair |
+| `POST` | `/auth/forgot-password` / `reset-password` | `{ email }` / `{ token, new_password }` | email link is a dev-stub (token logged) |
+| `POST` | `/auth/request-verification` / `verify` | `{ email }` / `{ token }` | email verify, same dev-stub pattern |
+
+Design:
+- **Tokens**: HS256 JWTs — `access` (15 min) + `refresh` (30 d). Refresh tokens are rotation-rotated and tracked in a `RefreshTokenStore` (revocation on refresh/logout). `TokenService` issues `reset`/`verify` JWTs for password/email flows.
+- **Passwords**: Argon2 via `pwdlib[argon2]`.
+- **Stores**: `UserStore`, `RefreshTokenStore`, `OAuthStateStore` are protocols. **In-memory impls now** (app runs without a DB); a `PostgresUserStore` slots in behind the same interface when `store.py`'s asyncpg pool lands.
+- **OAuth**: state param (stored + consumed, 10 min TTL) protects the callback; provider HTTP calls are `_provider_authorize_url` / `_exchange_code` / `_fetch_userinfo` so tests can stub them. Providers 503 if unconfigured.
+- **Shared assets** (`/presets`, `/skills/{name}`) stay public reads; everything else requires a token.
+
 ## Steps
 
 1. **Fix `isolation.py`** — implement `run_code` (may need to keep it behind a try/import so the app runs without Vercel credentials).
@@ -78,7 +105,7 @@ Mechanics (verified against `vercel-sandbox 0.4.0` SDK):
 3. **`store.py`** — asyncpg pool + S3 client; `get_deck/put_deck`, asset put/get, snapshot helpers.
 4. **`export.py`** — Python HTML renderer + pandoc PDF.
 5. **`main.py`** — FastAPI app wiring store + isolation + export.
-6. **`pyproject.toml`** — add `asyncpg`, `boto3` (or `aioboto3`), `weasyprint`, `pydantic-settings`.
+6. **`pyproject.toml`** — add `asyncpg`, `boto3` (or `aioboto3`), `weasyprint`, `pydantic-settings`. Auth deps already added: `pwdlib[argon2]`, `pyjwt`, `httpx`, `email-validator`.
 7. **Deploy/dev infra** — compose for Postgres + LocalStack; `.env.example`.
 
 ## Verification

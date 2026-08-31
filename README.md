@@ -51,12 +51,14 @@ Early development. What exists today:
 
 - **MCP server** (`packages/mcp`, stdio) — lifecycle, knowledge, editing,
   feedback, and output tools over a `deck.json` project (`packages/core/store.ts`).
-- **Web app** (`apps/web`) — React editor with a DeepSeek-styled light theme:
-  starter page (focus + materials + look carousel), slide canvas with a
+- **Web app** (`apps/local-frontend`) — React editor with a DeepSeek-styled light
+  theme: starter page (focus + materials + look carousel), slide canvas with a
   shadow-DOM style boundary, slide rail, preset panel, and a draggable
-  comment bar anchored to slide positions.
+  comment bar anchored to slide positions. A remote copy (`apps/remote-frontend`)
+  points the same editor at the FastAPI backend at `http://127.0.0.1:8000` with
+  an auth gate (register/login) and project-scoped deck/comments.
 - **Feedback loop** — comments are sent to a local backend bridge
-  (`apps/web/index.ts`, `DECKWORK_PROJECT_DIR` default `.deckworks`). Pressing
+  (`apps/local-frontend/index.ts`, `DECKWORK_PROJECT_DIR` default `.deckworks`). Pressing
   **Compile** captures one annotated screenshot per slide that has open
   comments and persists slides/screenshots into `deck.json`, ready for the
   agent to consume.
@@ -784,7 +786,7 @@ Acceptance test:
 The same presentation can be saved and exported to HTML, PDF, and PPTX.
 
 Status: HTML, PDF, and PPTX export are implemented. The web backend
-(`apps/web/index.ts`) and the MCP `deck_export` tool share one pipeline in
+(`apps/local-frontend/index.ts`) and the MCP `deck_export` tool share one pipeline in
 `packages/export`: it writes one self-contained HTML file per slide into
 `tmp/slides/`, then compiles the deck — HTML merges the slide files, PDF prints
 every slide as one page (`@react-pdf/renderer`, browserless), and PPTX builds a

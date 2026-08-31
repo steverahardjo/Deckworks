@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@deckworks/core": ["../../packages/core/src/index.ts"],
+      "@deckworks/core/store": ["../../packages/core/src/store.ts"],
+      "@deckworks/export": ["../../packages/export/src/index.ts"],
+      "@deckworks/export/html": ["../../packages/export/src/exportHtml.ts"],
+      "@deckworks/export/pdf": ["../../packages/export/src/exportPdf.tsx"],
+      "@deckworks/export/ops": ["../../packages/export/src/ops.ts"]
+    }
+  }
+}
