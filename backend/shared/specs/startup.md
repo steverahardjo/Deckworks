@@ -53,3 +53,11 @@ Canvas 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`.
 
 - Don't write paragraphs — this look rewards fragments.
 - Don't use more than one accent element per slide.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Real metrics / traction numbers | User provides (do not invent) |
+| Company SVG logo (white/mono, for dark background) | User provides (drop into project `assets/`) |
+| Market context | Agent researches |

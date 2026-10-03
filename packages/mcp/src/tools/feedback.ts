@@ -16,7 +16,7 @@ import { guard } from "./util.js";
 let commentSeq = 0;
 
 /** Element types the renderer actually draws. Everything else renders as "". */
-const RENDERABLE_TYPES = new Set(["title", "subtitle", "body", "chart"]);
+const RENDERABLE_TYPES = new Set(["title", "subtitle", "body", "chart", "image"]);
 
 const TEXT_TYPES = ["title", "subtitle", "body"] as const;
 type TextType = (typeof TEXT_TYPES)[number];
@@ -146,7 +146,7 @@ function reviewPresentation(
           problem:
             `Element type "${el.type}" does not render — it is stored in deck.json ` +
             `but produces no output in preview, PDF, PPTX or compiled screenshots.`,
-          fix: "Replace it with a title, subtitle, body or chart element, or drop it.",
+          fix: "Replace it with a title, subtitle, body, chart or image element, or drop it.",
         });
       }
 

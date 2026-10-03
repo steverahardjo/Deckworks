@@ -12,6 +12,10 @@ Look at each rendered slide (screenshot or preview) and report concrete layout/c
 2. `deck_review` to inspect and report problems.
 3. For each issue, `deck_change` the offending element, then re-preview.
 
+`deck_review` measures body-copy density against **the one look spec** already
+applied to the deck (loaded via `deck_load_look` at setup) — you do not need to
+reload all specs here.
+
 ## Checklist
 
 - **Overflow**: text taller than its box, or boxes running off the 1280×720 canvas.

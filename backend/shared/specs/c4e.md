@@ -52,3 +52,11 @@ Canvas 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`.
 
 - Don't fill large areas with the accent blue.
 - Don't add decorative elements; this look has no room for them.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Technical spec / content | User provides or Agent researches (be exact) |
+| Org SVG logo (outline-only, pure blue) | User provides (only if required) |
+| Reference data | Agent researches |

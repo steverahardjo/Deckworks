@@ -1,20 +1,76 @@
+import { readFileSync } from "node:fs";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import type { Element, Presentation, Slide, Theme } from "@deckworks/core";
 
-const FONT_STACK =
-  '"Anthropic Sans Text", "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+/**
+ * The single shared stylesheet that rules every slide. It lives in the spec
+ * directory so all looks, the MCP server and the frontend can agree on it.
+ * Override its location with DECKWORKS_SPECS_DIR for bundled installs.
+ */
+const SPECS_DIR =
+  process.env.DECKWORKS_SPECS_DIR ??
+  resolve(import.meta.dir, "../../../backend/shared/specs");
+
+let sharedCssCache: string | null = null;
+function sharedCss(): string {
+  if (sharedCssCache !== null) return sharedCssCache;
+  try {
+    sharedCssCache = readFileSync(join(SPECS_DIR, "slide.css"), "utf8");
+  } catch {
+    sharedCssCache = FALLBACK_CSS;
+  }
+  return sharedCssCache;
+}
+
+/**
+ * Anthropic Sans, embedded as base64 data URIs so exported documents (and the
+ * PDF printed from them by headless Chrome) render the deck's real typeface
+ * without depending on fonts installed on the machine.
+ */
+const FONT_DIR = resolve(import.meta.dir, "../assets/fonts");
+const FONT_FILES: [number, string][] = [
+  [300, "AnthropicSans-Text-Light-Static.otf"],
+  [400, "AnthropicSans-Text-Regular-Static.otf"],
+  [500, "AnthropicSans-Text-Medium-Static.otf"],
+  [600, "AnthropicSans-Text-Semibold-Static.otf"],
+  [700, "AnthropicSans-Text-Bold-Static.otf"],
+];
+
+let fontFaceCache: string | null = null;
+function fontFaceCss(): string {
+  if (fontFaceCache !== null) return fontFaceCache;
+  const rules: string[] = [];
+  for (const [weight, file] of FONT_FILES) {
+    try {
+      const b64 = readFileSync(join(FONT_DIR, file)).toString("base64");
+      rules.push(
+        `@font-face{font-family:"Anthropic Sans Text";font-style:normal;` +
+          `font-weight:${weight};font-display:swap;` +
+          `src:url(data:font/otf;base64,${b64}) format("opentype");}`
+      );
+    } catch {
+      /* font missing — fall back to the stack */
+    }
+  }
+  fontFaceCache = rules.join("\n");
+  return fontFaceCache;
+}
+
+/** Minimal fallback so slides stay legible if the spec stylesheet is missing. */
+const FALLBACK_CSS = `.slide-surface{position:relative;overflow:hidden;width:100%;height:100%;background:var(--slide-bg,#fff);color:var(--slide-fg,#0f172a);font-family:var(--slide-font,system-ui,sans-serif)}
+.slide-el{position:absolute}
+.slide-title{font-size:54px;font-weight:700;line-height:1.1;color:var(--slide-fg)}
+.slide-subtitle{font-size:28px;line-height:1.1;color:var(--slide-muted)}
+.slide-body{font-size:20px;line-height:1.6;color:var(--slide-muted);white-space:pre-line}
+.slide-chart{display:flex;align-items:center;justify-content:center;border:2px solid var(--slide-accent);border-radius:12px;color:var(--slide-muted)}
+.slide-image{display:flex;align-items:center;justify-content:center;overflow:hidden}
+.slide-image>img,.slide-image>svg{width:100%;height:100%;object-fit:contain}`;
 
 const SLIDE_CSS = `
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
-body { font-family: ${FONT_STACK}; background: #e5e7eb; }
-.slide-surface {
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  height: 100%;
-}
+body { font-family: var(--font-stack, system-ui, sans-serif); background: #e5e7eb; }
 .slide {
   width: var(--slide-width);
   height: var(--slide-height);
@@ -30,7 +86,7 @@ body { font-family: ${FONT_STACK}; background: #e5e7eb; }
 
 /**
  * Type scale for rendered elements — the single source of truth for element
- * typography. The HTML renderer applies it, and the MCP `deck_review` tool
+ * typography. The shared stylesheet applies it, and the MCP `deck_review` tool
  * reads it to estimate text overflow.
  */
 export const TYPE_SCALE = {
@@ -39,16 +95,18 @@ export const TYPE_SCALE = {
   body: { fontSize: 20, fontWeight: 400, lineHeight: 1.6 },
 } as const;
 
-export function slideInnerHtml(slide: Slide, theme: Theme): string {
-  return slide.elements
-    .map((el) => elementHtml(el, theme))
-    .filter(Boolean)
-    .join("\n      ");
+/** Theme colours + font, exposed to the shared stylesheet as CSS variables. */
+function themeVarsCss(theme: Theme): string {
+  return `.slide-surface{--slide-bg:${theme.background};--slide-fg:${theme.foreground};--slide-muted:${theme.muted};--slide-accent:${theme.accent};--slide-font:${theme.font};}`;
 }
 
-export function slideSurfaceHtml(slide: Slide, theme: Theme): string {
-  return `<div class="slide-surface" style="background:${theme.background};color:${theme.foreground}">
-      ${slideInnerHtml(slide, theme)}
+export function slideInnerHtml(slide: Slide): string {
+  return slide.elements.map((el) => elementHtml(el)).filter(Boolean).join("\n      ");
+}
+
+export function slideSurfaceHtml(slide: Slide): string {
+  return `<div class="slide-surface">
+      ${slideInnerHtml(slide)}
     </div>`;
 }
 
@@ -68,13 +126,16 @@ export function slideDocumentHtml(
 :root {
   --slide-width: ${dimensions.width}px;
   --slide-height: ${dimensions.height}px;
+  --font-stack: ${theme.font};
 }
 ${SLIDE_CSS}
+${sharedCss()}
+${themeVarsCss(theme)}
 </style>
 </head>
 <body>
 <section class="slide" data-slide="${slide.id}">
-${slideSurfaceHtml(slide, theme)}
+${slideSurfaceHtml(slide)}
 </section>
 </body>
 </html>
@@ -85,8 +146,8 @@ export function renderPresentationHtml(presentation: Presentation): string {
   const { theme, dimensions, slides, metadata } = presentation;
   const slidesHtml = slides
     .map(
-      (s, i) => `    <section class="slide" data-slide="${s.id}">
-      ${slideSurfaceHtml(s, theme)}
+      (s) => `    <section class="slide" data-slide="${s.id}">
+      ${slideSurfaceHtml(s)}
     </section>`
     )
     .join("\n");
@@ -100,8 +161,12 @@ export function renderPresentationHtml(presentation: Presentation): string {
 :root {
   --slide-width: ${dimensions.width}px;
   --slide-height: ${dimensions.height}px;
+  --font-stack: ${theme.font};
 }
 ${SLIDE_CSS}
+${sharedCss()}
+${themeVarsCss(theme)}
+${fontFaceCss()}
 @page {
   size: ${dimensions.width}px ${dimensions.height}px;
   margin: 0;
@@ -176,8 +241,12 @@ export async function compileSlidesFromDir(
 :root {
   --slide-width: ${dimensions.width}px;
   --slide-height: ${dimensions.height}px;
+  --font-stack: ${theme.font};
 }
 ${SLIDE_CSS}
+${sharedCss()}
+${themeVarsCss(theme)}
+${fontFaceCss()}
 @page {
   size: ${dimensions.width}px ${dimensions.height}px;
   margin: 0;
@@ -191,39 +260,57 @@ ${slidesHtml.join("\n")}
 `;
 }
 
-function elementHtml(el: Element, theme: Theme): string {
+/**
+ * One element → one `.slide-el .slide-<type>` node carrying only its box
+ * geometry inline. All visual styling comes from the shared stylesheet.
+ */
+function elementHtml(el: Element): string {
   const x = el.position.x;
   const y = el.position.y;
   const w = el.size.width;
   const h = el.size.height;
-  const base = `position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
+  const base = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
   const text = String(el.properties.text ?? "");
+  const cls = `slide-el slide-${el.type}`;
+  const svg = String(el.properties.svg ?? "").trim();
 
   switch (el.type) {
     case "title":
-      return `<div style="${base}font-size:${TYPE_SCALE.title.fontSize}px;font-weight:${TYPE_SCALE.title.fontWeight};line-height:${TYPE_SCALE.title.lineHeight};color:${theme.foreground}">${escapeHtml(
-        text
-      )}</div>`;
     case "subtitle":
-      return `<div style="${base}font-size:${TYPE_SCALE.subtitle.fontSize}px;font-weight:${TYPE_SCALE.subtitle.fontWeight};line-height:${TYPE_SCALE.subtitle.lineHeight};color:${theme.muted}">${escapeHtml(
-        text
-      )}</div>`;
     case "body":
-      return `<div style="${base}font-size:${TYPE_SCALE.body.fontSize}px;line-height:${TYPE_SCALE.body.lineHeight};color:${theme.muted};white-space:pre-line">${escapeHtml(
-        text
-      )}</div>`;
-    case "chart":
-      return `<div style="${base}display:flex;align-items:center;justify-content:center;border:2px solid ${theme.accent};border-radius:12px;color:${theme.muted}">Chart</div>`;
+    case "table":
+      return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
+    case "callout":
+      return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
+    case "divider":
+    case "shape":
+      return `<div class="${cls}" style="${base}"></div>`;
+    case "image": {
+      if (svg) return `<div class="${cls}" style="${base}">${svg}</div>`;
+      const src = String(el.properties.src ?? "").trim();
+      if (!src) return "";
+      return `<div class="${cls}" style="${base}"><img src="${escapeAttr(src)}" alt="${escapeAttr(
+        String(el.properties.alt ?? "")
+      )}"/></div>`;
+    }
+    case "chart": {
+      if (svg) return `<div class="${cls}" style="${base}">${svg}</div>`;
+      return `<div class="${cls}" style="${base}">${escapeHtml(text || "Chart")}</div>`;
+    }
     default:
       return "";
   }
 }
 
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function escapeAttr(value: string): string {
+  return escapeHtml(value);
 }

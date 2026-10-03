@@ -1,5 +1,10 @@
+import type { CSSProperties } from "react";
+
 import type { Element, Slide } from "@deckworks/core";
 import { useAppState } from "@/state/store";
+
+// The single stylesheet that rules every slide lives in the spec directory.
+import "../../../../backend/shared/specs/slide.css";
 
 export function SlideSurface({
   slide,
@@ -22,16 +27,19 @@ export function SlideSurface({
 
   return (
     <div
-      style={{
-        position: "relative",
-        width: dimensions.width,
-        height: dimensions.height,
-        background: theme.background,
-        color: theme.foreground,
-        fontFamily: theme.font,
-        transformOrigin: "top left",
-      }}
       className="slide-surface"
+      style={
+        {
+          width: dimensions.width,
+          height: dimensions.height,
+          transformOrigin: "top left",
+          "--slide-bg": theme.background,
+          "--slide-fg": theme.foreground,
+          "--slide-muted": theme.muted,
+          "--slide-accent": theme.accent,
+          "--slide-font": theme.font,
+        } as CSSProperties
+      }
     >
       {slide.elements.map((el) => (
         <SlideElement key={el.id} element={el} debug={debug} />
@@ -66,66 +74,52 @@ export function SlideElement({
   element: Element;
   debug?: boolean;
 }) {
-  const { presentation } = useAppState();
-  const { theme } = presentation;
-
-  const style: React.CSSProperties = {
-    position: "absolute",
+  const style: CSSProperties = {
     left: element.position.x,
     top: element.position.y,
     width: element.size.width,
     height: element.size.height,
   };
+  const cls = `slide-el slide-${element.type}`;
+  const text = String(element.properties.text ?? "");
+  const svg = String(element.properties.svg ?? "").trim();
 
   let content: React.ReactNode = null;
 
   switch (element.type) {
     case "title":
-      content = (
-        <div style={{ ...style, fontSize: 54, fontWeight: 700, lineHeight: 1.1 }}>
-          {String(element.properties.text ?? "")}
-        </div>
-      );
-      break;
     case "subtitle":
-      content = (
-        <div style={{ ...style, fontSize: 28, fontWeight: 400, color: theme.muted }}>
-          {String(element.properties.text ?? "")}
-        </div>
-      );
-      break;
     case "body":
-      content = (
-        <div
-          style={{
-            ...style,
-            fontSize: 20,
-            lineHeight: 1.6,
-            color: theme.muted,
-            whiteSpace: "pre-line",
-          }}
-        >
-          {String(element.properties.text ?? "")}
-        </div>
-      );
+    case "table":
+    case "callout":
+      content = <div className={cls} style={style}>{text}</div>;
+      break;
+    case "divider":
+    case "shape":
+      content = <div className={cls} style={style} />;
       break;
     case "chart":
-      content = (
-        <div
-          style={{
-            ...style,
-            border: `2px solid ${theme.accent}`,
-            borderRadius: 12,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: theme.muted,
-          }}
-        >
-          Chart
-        </div>
+      content = svg ? (
+        <div className={cls} style={style} dangerouslySetInnerHTML={{ __html: svg }} />
+      ) : (
+        <div className={cls} style={style}>{text || "Chart"}</div>
       );
       break;
+    case "image": {
+      const src = String(element.properties.src ?? "").trim();
+      if (svg) {
+        content = (
+          <div className={cls} style={style} dangerouslySetInnerHTML={{ __html: svg }} />
+        );
+      } else if (src) {
+        content = (
+          <div className={cls} style={style}>
+            <img src={src} alt={String(element.properties.alt ?? "")} />
+          </div>
+        );
+      }
+      break;
+    }
   }
 
   if (!content) return null;
@@ -135,8 +129,8 @@ export function SlideElement({
       {content}
       {debug && (
         <div
-          style={{ ...style, pointerEvents: "none" }}
-          className="z-10 border border-dashed border-red-400/80"
+          style={{ ...style }}
+          className="absolute z-10 border border-dashed border-red-400/80 pointer-events-none"
         >
           <span
             style={{ left: element.position.x, top: element.position.y }}

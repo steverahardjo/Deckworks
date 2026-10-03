@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DeckworksApp, ElementPatch } from "@deckworks/core/store";
+import { presets } from "@deckworks/core";
 import type { Slide } from "@deckworks/core";
 
 import { guard } from "./util.js";
@@ -113,6 +114,129 @@ export function registerEditingTools(server: McpServer, app: DeckworksApp) {
       guard(() => {
         app.reorderSlide(args.slideId, args.index);
         return { slides: app.state.slides.map((s) => s.id) };
+      })
+  );
+
+  // ── Simplified slide API ────────────────────────────────────────────────
+  // list_slide() / change_styling() / add_slide() / change_slide(slide, page).
+  // Styling is deck-wide and driven by one shared stylesheet — never per slide.
+
+  server.registerTool(
+    "list_slide",
+    {
+      description:
+        "List every slide with its zero-based page, id, layout and elements (id, type, text).",
+    },
+    async () =>
+      guard(() => ({
+        slides: app.state.slides.map((s, index) => ({
+          page: index,
+          id: s.id,
+          layout: s.layout,
+          elements: s.elements.map((el) => ({
+            id: el.id,
+            type: el.type,
+            text: String(el.properties.text ?? ""),
+          })),
+        })),
+      }))
+  );
+
+  server.registerTool(
+    "change_styling",
+    {
+      description:
+        "Change deck-wide styling. Pass a look/preset id (accent, academic, c4e, consulting, corporate, dark, deloitte, editorial, minimal, mckinsey, startup, travel) to apply that spec's palette; omit it to read the current styling. One shared stylesheet (specs/slide.css) rules every slide — styling is never per slide.",
+      inputSchema: {
+        style: z
+          .string()
+          .optional()
+          .describe("Look/preset id, e.g. dark, consulting, mckinsey. Omit to read current."),
+      },
+    },
+    async (args) =>
+      guard(() => {
+        if (args.style) {
+          const preset = presets.find(
+            (p) => p.id === args.style || p.theme.id === args.style
+          );
+          if (!preset) {
+            throw new Error(
+              `Unknown style "${args.style}". Available: ${presets
+                .map((p) => p.id)
+                .join(", ")}.`
+            );
+          }
+          app.state.theme = preset.theme;
+          app.state.template = preset.id;
+        }
+        return { template: app.state.template, theme: app.state.theme };
+      })
+  );
+
+  server.registerTool(
+    "add_slide",
+    {
+      description: "Append a slide, or insert it at a zero-based page index.",
+      inputSchema: {
+        slide: slideSchema,
+        page: z.number().int().nonnegative().optional(),
+      },
+    },
+    async (args) =>
+      guard(() => {
+        const slide: Slide = {
+          ...args.slide,
+          elements: args.slide.elements.map((el) => ({
+            ...el,
+            properties: el.properties ?? {},
+          })),
+        };
+        const slides = app.state.slides;
+        if (args.page === undefined || args.page >= slides.length) {
+          slides.push(slide);
+        } else {
+          slides.splice(args.page, 0, slide);
+        }
+        return {
+          added: slide.id,
+          page: args.page ?? slides.length - 1,
+          slideCount: slides.length,
+        };
+      })
+  );
+
+  server.registerTool(
+    "change_slide",
+    {
+      description:
+        "Replace the slide at a page (zero-based index or slide id) with new content. Use list_slide to find the page.",
+      inputSchema: {
+        slide: slideSchema,
+        page: z.union([z.number().int().nonnegative(), z.string()]),
+      },
+    },
+    async (args) =>
+      guard(() => {
+        const slides = app.state.slides;
+        const index =
+          typeof args.page === "number"
+            ? args.page
+            : slides.findIndex((s) => s.id === args.page);
+        if (index < 0 || index >= slides.length) {
+          throw new Error(
+            `Page "${args.page}" not found. Valid pages: 0–${slides.length - 1}.`
+          );
+        }
+        const slide: Slide = {
+          ...args.slide,
+          elements: args.slide.elements.map((el) => ({
+            ...el,
+            properties: el.properties ?? {},
+          })),
+        };
+        slides[index] = slide;
+        return { changed: slide.id, page: index, slideCount: slides.length };
       })
   );
 }

@@ -1,5 +1,6 @@
 export { renderPresentationHtml, slideSurfaceHtml, slideInnerHtml, slideDocumentHtml, writeSlideFiles, compileSlidesFromDir, TYPE_SCALE } from "./exportHtml.js";
 export { renderPresentationPdf } from "./exportPdf.js";
+export { renderPresentationPdfViaChrome, findChrome } from "./exportPdfChrome.js";
 export { renderPresentationPptx } from "./exportPptx.js";
 export { exportDeck } from "./ops.js";
 export type { ExportFormat, ExportResult } from "./ops.js";

@@ -43,6 +43,12 @@ const server = serve({
       },
     },
 
+    "/api/presentation": {
+      async GET() {
+        return Response.json({ presentation: app.state });
+      },
+    },
+
     "/api/comments": {
       async GET() {
         return Response.json({ comments: app.state.comments });

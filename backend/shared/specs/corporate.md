@@ -52,3 +52,11 @@ Canvas 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`.
 
 - Don't use the accent for emphasis text; reserve it for structure.
 - Don't vary title y-position between content slides.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Org SVG logo / wordmark | User provides (drop into project `assets/`) |
+| Focus + source materials | User provides |
+| Process / structure data | Agent researches or derives from materials |

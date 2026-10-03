@@ -53,3 +53,11 @@ Canvas 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`.
 
 - Don't use topic titles ("Revenue", "Overview") — state the finding.
 - Don't place two charts on one slide unless they are explicitly compared.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Client/org SVG logo | User provides (drop into project `assets/`) |
+| Focus + source materials | User provides |
+| Exhibit data (charts) | Agent researches or derives from materials |

@@ -51,3 +51,11 @@ Canvas 1280×720. Safe area: `x 140 → 1140` (slightly inset), `y 110 → 610`.
 
 - Don't use pure white or pure black — it breaks the paper feel.
 - Don't crowd a slide; if in doubt, split it.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Focus + source materials | User provides |
+| Photography (optional, wide margins) | User provides (drop into project `assets/`) |
+| Narrative facts / data | Agent researches |

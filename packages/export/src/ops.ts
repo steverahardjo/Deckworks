@@ -4,6 +4,7 @@ import type { Presentation } from "@deckworks/core";
 
 import { compileSlidesFromDir, writeSlideFiles } from "./exportHtml.js";
 import { renderPresentationPdf } from "./exportPdf.js";
+import { renderPresentationPdfViaChrome } from "./exportPdfChrome.js";
 import { renderPresentationPptx } from "./exportPptx.js";
 
 export { writeSlideFiles, compileSlidesFromDir } from "./exportHtml.js";
@@ -63,7 +64,11 @@ export async function exportDeck(
     };
   }
 
-  const pdf = await renderPresentationPdf(presentation);
+  // Prefer the HTML/CSS engine (headless Chrome) so the PDF matches slide.css
+  // and the SVG exhibits; fall back to React-PDF when Chrome is unavailable.
+  const pdf =
+    (await renderPresentationPdfViaChrome(presentation, slidesDir)) ??
+    (await renderPresentationPdf(presentation));
   await writeFile(filePath, pdf);
   return {
     format,

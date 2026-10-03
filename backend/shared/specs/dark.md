@@ -55,3 +55,13 @@ Canvas 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`.
 
 - Don't set body copy in the foreground colour — it flattens the hierarchy.
 - Don't export to PDF for print; the dark background wastes toner.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Product/org SVG logo (white/mono, for dark background) | User provides (drop into project `assets/`) |
+| Focus + source materials | User provides |
+| Exhibit data (charts) | Agent researches or derives from materials |
+
+> Screen-only look: do not export to PDF for print.

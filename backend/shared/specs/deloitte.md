@@ -54,3 +54,11 @@ Canvas 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`.
 
 - Don't use the green for body text or titles — it is an anchor, not a voice.
 - Don't place two green elements on the same slide unless comparing them.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Brand wordmark / SVG logo | User provides (drop into project `assets/`) |
+| Focus + source materials | User provides |
+| Exhibit data (one green anchor per slide) | Agent researches or derives from materials |

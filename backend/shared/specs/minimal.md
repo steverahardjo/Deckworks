@@ -58,3 +58,11 @@ Canvas is 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`.
 - Don't use the accent to highlight a word — it is the foreground colour and
   will read as a mistake.
 - Don't fill the lower third of a slide just because it is empty.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Focus + source materials | User provides |
+| Chart data | Agent researches or derives from materials |
+| Logo / brand assets | User provides (only if the deck must carry one; minimal usually forgoes them) |

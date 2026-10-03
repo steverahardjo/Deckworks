@@ -6,6 +6,16 @@ Producing deliverable files from presentation state.
 
 Export the active presentation to `html`, `pdf`, or `pptx`.
 
+## Human-in-the-loop — STOP before exporting
+
+Before exporting, confirm with the human:
+
+- the deck is review-clean (`deck_review` shows no errors),
+- the target format (`html` / `pdf` / `pptx`) is what they want.
+
+Note the look spec may forbid a format — e.g. `dark` is screen-only, so do not
+export it to PDF for print without asking.
+
 ## Steps
 
 1. `deck_save` so the state is persisted.

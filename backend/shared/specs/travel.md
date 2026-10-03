@@ -51,3 +51,11 @@ Canvas 1280×720. Safe area: `x 140 → 1140`, `y 110 → 610` — wide margins.
 
 - Don't use the accent for thin underlines or small marks; it will not read.
 - Don't crowd the slide to fit more content — split it instead.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Destination imagery | User provides (drop into project `assets/`) |
+| Itinerary facts / data | Agent researches |
+| Focus + source materials | User provides |

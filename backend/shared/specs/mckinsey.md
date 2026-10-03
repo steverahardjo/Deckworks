@@ -54,3 +54,12 @@ Canvas 1280×720. Safe area: `x 120 → 1160`, `y 100 → 620`. Strict.
 
 - Don't use the accent for body emphasis; it belongs to exhibits.
 - Don't put two exhibits on one slide — build a second slide.
+
+## Requirements & assets
+
+| Need | Provided by |
+| --- | --- |
+| Brand wordmark / SVG logo | User provides (drop into project `assets/`) |
+| Focus + source materials | User provides |
+| Exhibit data (one per slide) | Agent researches or derives from materials |
+| Brand palette fidelity | Agent researches (the spec fixes the accent; do not deviate) |

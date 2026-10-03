@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useReducer,
   type Dispatch,
   type ReactNode,
@@ -29,6 +30,7 @@ export type Action =
   | { type: "hydrate-comments"; comments: Comment[] }
   | { type: "resolve-comment"; commentId: string }
   | { type: "add-slide"; slide: Slide }
+  | { type: "hydrate"; presentation: Presentation }
   | { type: "compile" }
   | { type: "add-material"; material: Material }
   | { type: "remove-material"; id: string }
@@ -99,6 +101,13 @@ function reducer(state: State, action: Action): State {
           slides: [...state.presentation.slides, action.slide],
         },
       };
+    case "hydrate":
+      return {
+        ...state,
+        presentation: action.presentation,
+        activeSlideId: action.presentation.slides[0]?.id ?? state.activeSlideId,
+        selectedLook: action.presentation.template,
+      };
     case "compile": {
       const hasOpen = state.presentation.comments.some((c) => c.status === "open");
       if (!hasOpen) return state;
@@ -149,6 +158,23 @@ const DispatchContext = createContext<Dispatch<Action> | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/presentation")
+      .then((res) =>
+        res.ok ? (res.json() as Promise<{ presentation: Presentation }>) : null
+      )
+      .then((data) => {
+        if (cancelled || !data?.presentation?.slides?.length) return;
+        dispatch({ type: "hydrate", presentation: data.presentation });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
     <StateContext.Provider value={state}>
       <DispatchContext.Provider value={dispatch}>
