@@ -28,6 +28,17 @@ body { font-family: ${FONT_STACK}; background: #e5e7eb; }
 @media print { body { background: #ffffff; } }
 `;
 
+/**
+ * Type scale for rendered elements — the single source of truth for element
+ * typography. The HTML renderer applies it, and the MCP `deck_review` tool
+ * reads it to estimate text overflow.
+ */
+export const TYPE_SCALE = {
+  title: { fontSize: 54, fontWeight: 700, lineHeight: 1.1 },
+  subtitle: { fontSize: 28, fontWeight: 400, lineHeight: 1.1 },
+  body: { fontSize: 20, fontWeight: 400, lineHeight: 1.6 },
+} as const;
+
 export function slideInnerHtml(slide: Slide, theme: Theme): string {
   return slide.elements
     .map((el) => elementHtml(el, theme))
@@ -190,15 +201,15 @@ function elementHtml(el: Element, theme: Theme): string {
 
   switch (el.type) {
     case "title":
-      return `<div style="${base}font-size:54px;font-weight:700;line-height:1.1;color:${theme.foreground}">${escapeHtml(
+      return `<div style="${base}font-size:${TYPE_SCALE.title.fontSize}px;font-weight:${TYPE_SCALE.title.fontWeight};line-height:${TYPE_SCALE.title.lineHeight};color:${theme.foreground}">${escapeHtml(
         text
       )}</div>`;
     case "subtitle":
-      return `<div style="${base}font-size:28px;font-weight:400;line-height:1.1;color:${theme.muted}">${escapeHtml(
+      return `<div style="${base}font-size:${TYPE_SCALE.subtitle.fontSize}px;font-weight:${TYPE_SCALE.subtitle.fontWeight};line-height:${TYPE_SCALE.subtitle.lineHeight};color:${theme.muted}">${escapeHtml(
         text
       )}</div>`;
     case "body":
-      return `<div style="${base}font-size:20px;line-height:1.6;color:${theme.muted};white-space:pre-line">${escapeHtml(
+      return `<div style="${base}font-size:${TYPE_SCALE.body.fontSize}px;line-height:${TYPE_SCALE.body.lineHeight};color:${theme.muted};white-space:pre-line">${escapeHtml(
         text
       )}</div>`;
     case "chart":

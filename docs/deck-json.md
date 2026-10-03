@@ -195,7 +195,10 @@ Registered in `packages/mcp/src/`. Tool status: ✅ implemented, ⏳ stub.
 |            | `deck_status`          | ✅ |
 | Knowledge  | `deck_get_schema`      | ✅ (JSON Schema in `tools/knowledge.ts`) |
 |            | `deck_get_instructions`| ✅ |
-|            | `deck_load_skill`      | ⏳ (Phase 2) |
+|            | `deck_list_skills`     | ✅ (`backend/shared/skills/*.md`) |
+|            | `deck_load_skill`      | ✅ (`backend/shared/skills/*.md`) |
+|            | `deck_list_looks`      | ✅ (`backend/shared/specs/*.md`) |
+|            | `deck_load_look`       | ✅ (`backend/shared/specs/*.md`) |
 | Editing    | `deck_change`          | ✅ (`{ slideId, elementId, patch }`) |
 |            | `deck_add_slide`       | ✅ |
 |            | `deck_delete_slide`    | ✅ |
@@ -203,8 +206,8 @@ Registered in `packages/mcp/src/`. Tool status: ✅ implemented, ⏳ stub.
 | Feedback   | `deck_comment`         | ✅ |
 |            | `deck_comments`        | ✅ |
 |            | `deck_resolve_comment` | ✅ |
-|            | `deck_preview`         | ⏳ (Phase 5) |
-|            | `deck_review`          | ⏳ (Phase 6) |
+|            | `deck_preview`         | ✅ (writes `tmp/slides/` + merged `tmp/preview.html`) |
+|            | `deck_review`          | ✅ (geometry, overflow, overlap, unsupported types, look density) |
 | Output     | `deck_save`            | ✅ (writes `deck.json`) |
 |            | `deck_export`          | ✅ (html · pdf · pptx) |
 

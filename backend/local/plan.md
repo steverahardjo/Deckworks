@@ -2,7 +2,10 @@
 
 Local execution path: **MCP server (stdio) + core + export**, all TypeScript, running on the developer's machine. The web app is the frontend; it imports shared TS types from this package.
 
-> Status: **planned** — the code exists in git history (`HEAD~1`, commit `333b7e8` deleted it) and must be restored under `backend/local`, then re-linked.
+> Status: **partially done** — `packages/{core,export}` are present at the repo root already
+> (re-added by `2729174` "enabled app"), so only `packages/mcp` was still missing.
+> Commit `333b7e8` deleted all three, so recover content from `333b7e8^` (`3e3f35c`) —
+> **not** `HEAD~1`, which no longer contains it. The move to `backend/local/` has not been done.
 
 ## Shared assets
 
@@ -47,7 +50,7 @@ backend/local/
 
 ## Restore steps
 
-1. **Copy code from git history** — `git show HEAD~1:packages/{core,export,mcp}` → `backend/local/{core,export,mcp}`, preserving file contents verbatim (including `exportPptx.ts`).
+1. **Copy code from git history** — `git show 3e3f35c:packages/mcp` → `packages/mcp` (already done; MCP is restored and working under `packages/mcp`). `core` and `export` need no recovery — they are present at `packages/`. Only relocate to `backend/local/{core,export,mcp}` if that move is still wanted.
 2. **Add `package.json`** to each (keep existing names `@deckworks/core`, `@deckworks/export`, `@deckworks/mcp`, subpath exports, and `bin`).
 3. **Root `package.json`**:
    - `workspaces`: `["apps/web/*"]` → `["backend/local/*"]` (keep `apps/web` too if it becomes a workspace).
