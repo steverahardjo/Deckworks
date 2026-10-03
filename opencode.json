@@ -1,0 +1,15 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "deckworks": {
+      "type": "local",
+      "command": ["/home/holyknight101/Documents/Projects/Personal/Deckworks/dist/deckworks-mcp"],
+      "enabled": true,
+      "environment": {
+        "DECKWORKS_SKILLS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/backend/shared/skills",
+        "DECKWORKS_SPECS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/backend/shared/specs",
+        "DECKWORKS_FONTS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/packages/export/assets/fonts"
+      }
+    }
+  }
+}

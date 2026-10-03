@@ -10,7 +10,8 @@ import {
 import { join } from "node:path";
 import type { Element, Presentation, Theme } from "@deckworks/core";
 
-const FONT_DIR = join(import.meta.dir, "../assets/fonts");
+const FONT_DIR =
+  process.env.DECKWORKS_FONTS_DIR ?? join(import.meta.dir, "../assets/fonts");
 
 let fontsRegistered = false;
 function registerFonts() {
