@@ -154,6 +154,9 @@ MCP
 
 The MCP server is the primary interface for coding agents.
 
+See packages/mcp/README.md for per-client setup (Claude Code, OpenCode, Codex,
+and any other MCP client) and the agent workflow.
+
 The MCP is deliberately workflow-oriented rather than exposing only low-level CRUD operations.
 
 Lifecycle
