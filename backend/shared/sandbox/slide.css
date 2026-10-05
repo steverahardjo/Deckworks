@@ -1,0 +1,316 @@
+/*
+ * Deckworks shared slide stylesheet.
+ *
+ * ONE stylesheet rules EVERY slide. Slides differ by content, layout and
+ * position only — never by per-slide styling. The renderer injects this file
+ * verbatim and each deck supplies its five theme colours + font as CSS custom
+ * properties on `.slide-surface`.
+ *
+ * Visuals (SVG / charts / widgets) are first-class: `image` renders
+ * `properties.src` (URL or data URI), and `chart` renders `properties.svg`
+ * inline when present, else the accent-bordered exhibit placeholder.
+ */
+
+.slide-surface {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  background: var(--slide-bg, #ffffff);
+  color: var(--slide-fg, #0f172a);
+  font-family: var(--slide-font, Georgia, "Bitstream Charter", "Noto Serif", "Liberation Serif", serif);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Every element is absolutely positioned by the renderer; this class carries
+   only the box model so no element needs its own styling. */
+.slide-el {
+  position: absolute;
+  margin: 0;
+}
+
+.slide-title {
+  font-size: 54px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--slide-fg);
+}
+
+.slide-subtitle {
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 1.1;
+  color: var(--slide-muted);
+}
+
+.slide-body {
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--slide-muted);
+  white-space: pre-line;
+}
+
+/* Evidence-heavy closing slides use structured points instead of a prose wall. */
+.slide-body--sources {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 18px;
+  color: var(--slide-muted);
+  white-space: normal;
+}
+
+.slide-sources__points {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 40px;
+}
+
+.slide-sources__eyebrow {
+  color: var(--slide-accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.slide-source-point {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.slide-source-point__mark {
+  width: 9px;
+  height: 9px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: var(--slide-accent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--slide-accent) 14%, transparent);
+}
+
+.slide-source-point__label,
+.slide-definition__label {
+  display: block;
+  color: var(--slide-fg);
+  font-weight: 700;
+  letter-spacing: 0.015em;
+}
+
+.slide-source-point__text,
+.slide-definition__text {
+  display: block;
+  margin-top: 3px;
+  color: var(--slide-muted);
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.slide-sources__definitions {
+  display: grid;
+  gap: 10px;
+  padding-top: 15px;
+  border-top: 1px solid color-mix(in srgb, var(--slide-accent) 34%, transparent);
+}
+
+.slide-definition__label {
+  display: inline;
+  margin-right: 8px;
+  color: var(--slide-accent);
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.slide-definition__text {
+  display: inline;
+  font-size: 17px;
+}
+
+.slide-sources__disclaimer {
+  padding-top: 12px;
+  border-top: 1px solid color-mix(in srgb, var(--slide-muted) 28%, transparent);
+  color: var(--slide-muted);
+  font-size: 15px;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+/* Exhibit / chart: accent border is the one accent per slide. */
+.slide-chart {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--slide-accent, #2563eb);
+  border-radius: 12px;
+  color: var(--slide-muted);
+  overflow: hidden;
+}
+
+.slide-chart > svg {
+  width: 100%;
+  height: 100%;
+}
+
+/* Visual / image: SVG or raster fills the box without distortion. */
+.slide-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.slide-image > img,
+.slide-image > svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.slide-callout {
+  padding: 16px 20px;
+  border-left: 4px solid var(--slide-accent, #2563eb);
+  color: var(--slide-fg);
+  font-size: 20px;
+  line-height: 1.5;
+}
+
+.slide-divider {
+  border-top: 2px solid var(--slide-accent, #2563eb);
+}
+
+.slide-shape {
+  background: var(--slide-accent, #2563eb);
+  border-radius: 12px;
+}
+
+.slide-table {
+  color: var(--slide-muted);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.sandbox {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 12vh 10vw;
+  background: #f7f6f3;
+  color: #1c1917;
+  font-family: "Anthropic Sans Text", Inter, system-ui, sans-serif;
+}
+
+.sandbox__eyebrow {
+  color: #8a5a19;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sandbox h1 {
+  max-width: 12ch;
+  margin: 1rem 0;
+  font-size: clamp(3rem, 8vw, 7rem);
+  line-height: 0.95;
+}
+
+.sandbox__hint {
+  max-width: 42rem;
+  color: #6b665e;
+  font-size: 1.25rem;
+}
+
+/* Dynamic composition primitives used by look-spec HTML snippets. */
+.slide-point {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--slide-bg, #fff);
+  border-radius: 999px;
+  background: var(--slide-accent, #2563eb);
+  box-shadow: 0 0 0 2px var(--slide-accent, #2563eb);
+}
+
+.slide-pointer {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--slide-fg, #0f172a);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.slide-pointer::before {
+  content: "";
+  display: block;
+  width: 48px;
+  border-top: 2px solid var(--slide-accent, #2563eb);
+  transform: rotate(-12deg);
+  transform-origin: right center;
+}
+
+.slide-timeline {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-top: 18px;
+}
+
+.slide-timeline::before {
+  content: "";
+  position: absolute;
+  top: 24px;
+  right: 8px;
+  left: 8px;
+  border-top: 2px solid color-mix(in srgb, var(--slide-accent, #2563eb) 55%, transparent);
+}
+
+.slide-timeline__item {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  color: var(--slide-muted, #64748b);
+  font-size: 14px;
+  text-align: center;
+}
+
+.slide-timeline__item strong {
+  color: var(--slide-fg, #0f172a);
+  font-size: 16px;
+}
+
+.slide-diagram {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 36px;
+}
+
+.slide-diagram__node {
+  position: relative;
+  z-index: 1;
+  padding: 16px;
+  border: 1px solid var(--slide-accent, #2563eb);
+  border-radius: 10px;
+  background: var(--slide-bg, #fff);
+  color: var(--slide-fg, #0f172a);
+  text-align: center;
+}
+
+.slide-diagram__node:not(:last-child)::after {
+  content: "→";
+  position: absolute;
+  top: 50%;
+  right: -30px;
+  color: var(--slide-accent, #2563eb);
+  font-size: 22px;
+  transform: translateY(-50%);
+}

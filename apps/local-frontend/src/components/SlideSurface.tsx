@@ -3,8 +3,55 @@ import type { CSSProperties } from "react";
 import type { Element, Slide } from "@deckworks/core";
 import { useAppState } from "@/state/store";
 
-// The single stylesheet that rules every slide lives in the spec directory.
-import "../../../../backend/shared/specs/slide.css";
+// The single stylesheet that rules every slide lives in the sandbox.
+import "../../../../backend/shared/sandbox/slide.css";
+
+type SourcePoint = { label: string; text: string };
+
+function sourcePoints(value: unknown): SourcePoint[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const record = item as Record<string, unknown>;
+    if (typeof record.label !== "string" || typeof record.text !== "string") return [];
+    return [{ label: record.label, text: record.text }];
+  });
+}
+
+function StructuredSourcesBody({ properties }: { properties: Record<string, unknown> }) {
+  const points = sourcePoints(properties.points);
+  const definitions = sourcePoints(properties.definitions);
+  const disclaimer = String(
+    properties.disclaimer ?? "This deck is a research summary, not investment advice."
+  );
+
+  return (
+    <>
+      <div className="slide-sources__eyebrow">Sources</div>
+      <div className="slide-sources__points">
+        {points.map((point) => (
+          <div className="slide-source-point" key={point.label}>
+            <span className="slide-source-point__mark" aria-hidden="true" />
+            <span>
+              <span className="slide-source-point__label">{point.label}</span>
+              <span className="slide-source-point__text">{point.text}</span>
+            </span>
+          </div>
+        ))}
+      </div>
+      <div className="slide-sources__definitions">
+        <div className="slide-sources__eyebrow">Definitions</div>
+        {definitions.map((definition) => (
+          <div className="slide-definition" key={definition.label}>
+            <span className="slide-definition__label">{definition.label}</span>
+            <span className="slide-definition__text">{definition.text}</span>
+          </div>
+        ))}
+      </div>
+      <div className="slide-sources__disclaimer">{disclaimer}</div>
+    </>
+  );
+}
 
 export function SlideSurface({
   slide,
@@ -89,10 +136,18 @@ export function SlideElement({
   switch (element.type) {
     case "title":
     case "subtitle":
-    case "body":
     case "table":
     case "callout":
       content = <div className={cls} style={style}>{text}</div>;
+      break;
+    case "body":
+      content = element.properties.variant === "sources" ? (
+        <div className={`${cls} slide-body--sources`} style={style}>
+          <StructuredSourcesBody properties={element.properties} />
+        </div>
+      ) : (
+        <div className={cls} style={style}>{text}</div>
+      );
       break;
     case "divider":
     case "shape":

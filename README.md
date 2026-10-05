@@ -146,6 +146,7 @@ deck_init
 deck_new
 deck_open
 deck_status
+deck_set_workflow
 ```
 
 **Agent knowledge**
@@ -188,23 +189,28 @@ The exact tool schema may evolve, but the conceptual workflow should remain stab
 
 Deckworks includes skills that teach coding agents how to use the system.
 
-Recommended structure:
+The operational instructions have one source of truth:
 
 ```text
-skills/
-├── setup/
-│   └── SKILL.md
-├── create/
-│   └── SKILL.md
-├── edit/
-│   └── SKILL.md
-├── review/
-│   └── SKILL.md
-└── export/
-    └── SKILL.md
+backend/shared/
+├── skills/
+│   ├── SKILL.md
+│   └── data-analysis.md
+├── spec/
+│   ├── workflow/
+│   └── look/
+└── sandbox/
+    ├── index.html
+    └── slide.css
 ```
 
-### Setup
+Workflow choices live in `backend/shared/spec/workflow/`; visual choices live
+in `backend/shared/spec/look/`. The MCP parses both directories at runtime.
+
+### Setup and routing
+
+If port 3000 is already in use, start either frontend on another port with
+`DECKWORKS_PORT=3001 bun run dev:local` or `DECKWORKS_PORT=3001 bun run dev:remote`.
 
 The setup skill teaches an agent to:
 
@@ -214,7 +220,7 @@ The setup skill teaches an agent to:
 - Inspect its template and theme.
 - Inspect available assets.
 - Understand the presentation dimensions.
-- Decide what workflow should happen next.
+- Route the request to exactly one workflow spec and persist the selection.
 
 ### Create
 
@@ -615,8 +621,8 @@ deckworks/
 │   ├── core/            # Presentation types, store (deck.json I/O), presets
 │   └── mcp/             # stdio MCP server wrapping DeckworksApp
 │
+├── backend/shared/      # skills, runtime specs, sandbox assets
 ├── docs/                # deck-json.md, frontend-plan.md
-├── SKILL.md             # (empty placeholder; skills ship in Phase 2)
 └── README.md
 ```
 

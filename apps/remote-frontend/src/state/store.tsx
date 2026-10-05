@@ -19,6 +19,7 @@ export type State = {
   activeSlideId: string;
   presets: Preset[];
   materials: Material[];
+  activeMarkdownId: string | null;
   selectedLook: string;
   focus: string;
   directive: string;
@@ -35,9 +36,12 @@ export type Action =
   | { type: "compile" }
   | { type: "add-material"; material: Material }
   | { type: "remove-material"; id: string }
+  | { type: "open-material"; id: string }
+  | { type: "close-material" }
   | { type: "select-look"; presetId: string }
   | { type: "set-focus"; focus: string }
   | { type: "set-directive"; directive: string }
+  | { type: "set-slide-notes"; slideId: string; notes: string }
   | { type: "build" };
 
 function reducer(state: State, action: Action): State {
@@ -121,17 +125,40 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         materials: state.materials.filter((m) => m.id !== action.id),
+        activeMarkdownId:
+          state.activeMarkdownId === action.id ? null : state.activeMarkdownId,
       };
+    case "open-material":
+      return { ...state, activeMarkdownId: action.id };
+    case "close-material":
+      return { ...state, activeMarkdownId: null };
     case "select-look":
       return { ...state, selectedLook: action.presetId };
     case "set-focus":
       return { ...state, focus: action.focus };
     case "set-directive":
       return { ...state, directive: action.directive };
+    case "set-slide-notes":
+      return {
+        ...state,
+        presentation: {
+          ...state.presentation,
+          slides: state.presentation.slides.map((slide) =>
+            slide.id === action.slideId ? { ...slide, notes: action.notes } : slide
+          ),
+        },
+      };
     case "build": {
       const preset = presetList.find((p) => p.id === state.selectedLook);
+      const note = state.materials.find(
+        (material) => material.kind === "md" && material.name.toLowerCase() === "note.md"
+      );
       return preset
-        ? { ...state, presentation: { ...state.presentation, theme: preset.theme, template: preset.id } }
+        ? {
+            ...state,
+            activeMarkdownId: note?.id ?? state.activeMarkdownId,
+            presentation: { ...state.presentation, theme: preset.theme, template: preset.id },
+          }
         : state;
     }
   }
@@ -142,6 +169,7 @@ const initialState: State = {
   activeSlideId: mockPresentation.slides[0]?.id ?? "slide-01",
   presets: presetList,
   materials: [],
+  activeMarkdownId: null,
   selectedLook: "consulting",
   focus: "",
   directive: "",

@@ -13,7 +13,7 @@ touching a browser.
 
 - **[Bun](https://bun.sh) 1.3+** — the server is TypeScript executed directly by Bun.
 - **This repository checked out** — the server reads agent skills from
-  `backend/shared/skills/` and look specs from `backend/shared/specs/`.
+  `backend/shared/skills/` and runtime specs from `backend/shared/spec/`.
 - **Dependencies installed** — run `bun install` once at the repository root.
 
 ## The command
@@ -158,15 +158,15 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 ## Tools
 
-21 tools, grouped by workflow stage.
+30 tools, grouped by workflow stage.
 
 | Stage | Tools |
 | --- | --- |
-| Lifecycle | `deck_init` · `deck_new` · `deck_open` · `deck_status` |
-| Knowledge | `deck_get_schema` · `deck_get_instructions` · `deck_list_skills` · `deck_load_skill` · `deck_list_looks` · `deck_load_look` |
+| Lifecycle | `deck_init` · `deck_new` · `deck_open` · `deck_status` · `deck_set_workflow` |
+| Knowledge | `deck_get_schema` · `deck_get_instructions` · `deck_list_specs` · `deck_list_skills` · `deck_load_skill` · `deck_list_workflows` · `deck_load_workflow` · `deck_list_looks` · `deck_load_look` |
 | Editing | `deck_add_slide` · `deck_change` · `deck_delete_slide` · `deck_reorder_slide` |
 | Feedback | `deck_comment` · `deck_comments` · `deck_resolve_comment` |
-| Preview & review | `deck_preview` · `deck_review` |
+| Preview & review | `deck_preview` · `deck_open_preview` · `deck_review` |
 | Persistence & output | `deck_save` · `deck_export` |
 
 ## The workflow to expect
@@ -175,14 +175,17 @@ The server is deliberately workflow-oriented rather than raw CRUD. A competent
 agent run looks like this:
 
 1. `deck_init` or `deck_open` — load a project (`deck.json` is the source of truth).
-2. `deck_list_skills` → `deck_load_skill` — load the phase skill
-   (`setup`, `create`, `edit`, `review`, `export`).
-3. `deck_list_looks` → `deck_load_look` — load the design spec for the chosen
+2. `deck_list_skills` → `deck_load_skill` — load `SKILL.md` (and
+   `data-analysis.md` only when analysis is needed).
+3. `deck_list_workflows` → `deck_set_workflow` → `deck_load_workflow` — select and persist the operating mode.
+4. `deck_list_looks` → `deck_load_look` — load the design spec for the chosen
    look **before** writing slides.
 4. `deck_add_slide` and `deck_change` — build content, targeting stable element ids.
 5. `deck_save` — persist.
 6. `deck_preview` → `deck_review` — render to HTML, then check geometry, overflow,
-   overlap, unsupported elements, and density against the look spec.
+   overlap, unsupported elements, and density against the look spec. Use
+   `deck_open_preview` to render and automatically open the result in a browser
+   (mode `file` for `tmp/preview.html`, mode `editor` for the live local editor).
 7. `deck_export` — `html`, `pdf`, or `pptx`.
 
 ### Skills and looks are files, not code
@@ -190,9 +193,10 @@ agent run looks like this:
 Everything the agent reads is plain Markdown in the repository, so you can edit
 it without touching TypeScript:
 
-- `backend/shared/skills/*.md` — one skill per workflow phase.
-- `backend/shared/specs/*.md` — one design spec per look (11 presets), defining
-  palette usage, a layout grid, a density ceiling, and chart conventions.
+- `backend/shared/skills/SKILL.md` — the single operational workflow source.
+- `backend/shared/skills/data-analysis.md` — the optional analysis companion.
+- `backend/shared/spec/workflow/*.md` — runtime-discovered operating modes.
+- `backend/shared/spec/look/*.md` — runtime-discovered visual systems.
 
 `deck_review` measures a deck's body copy against the density ceiling in the
 loaded look spec, so the specs are enforced rather than merely advisory.
@@ -204,7 +208,7 @@ Only **`title`, `subtitle`, `body` and `chart`** elements render. `image`,
 in `deck.json`, but produce no output in preview, export, or compiled
 screenshots. `deck_review` reports these as findings. Typography is fixed by the
 renderer (54/28/20px), so the eleven looks currently differ only by palette.
-See `backend/shared/specs/README.md` for details.
+See `backend/shared/spec/README.md` for details.
 
 ## Relocated or bundled installs
 
@@ -213,7 +217,7 @@ relative path. Point it at them explicitly:
 
 ```
 DECKWORKS_SKILLS_DIR=/path/to/backend/shared/skills
-DECKWORKS_SPECS_DIR=/path/to/backend/shared/specs
+DECKWORKS_SPEC_DIR=/path/to/backend/shared/spec
 ```
 
 In `mcpServers` JSON that is:
@@ -226,7 +230,7 @@ In `mcpServers` JSON that is:
       "args": ["/path/to/deckworks-mcp.js"],
       "env": {
         "DECKWORKS_SKILLS_DIR": "/path/to/backend/shared/skills",
-        "DECKWORKS_SPECS_DIR": "/path/to/backend/shared/specs"
+        "DECKWORKS_SPEC_DIR": "/path/to/backend/shared/spec"
       }
     }
   }

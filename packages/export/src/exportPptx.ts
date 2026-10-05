@@ -62,6 +62,11 @@ function addSlideElement(
       });
       break;
     case "chart":
+      if (typeof el.properties.svg === "string" && el.properties.svg.trim()) {
+        const svgData = `data:image/svg+xml;base64,${Buffer.from(el.properties.svg).toString("base64")}`;
+        slide.addImage({ data: svgData, x, y, w, h });
+        break;
+      }
       slide.addShape(pptx.ShapeType.rect, {
         x,
         y,

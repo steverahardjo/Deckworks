@@ -1,5 +1,5 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { join } from "node:path";
+import { mkdir, readdir, stat, writeFile } from "node:fs/promises";
+import { join, resolve, sep } from "node:path";
 import { serve } from "bun";
 import index from "./index.html";
 import { DeckworksApp } from "@deckworks/core/store";
@@ -7,6 +7,7 @@ import type { Comment, Presentation, Slide } from "@deckworks/core";
 import { exportDeck, writeSlideFiles } from "@deckworks/export/ops";
 
 const PROJECT_DIR = process.env.DECKWORK_PROJECT_DIR ?? ".deckworks";
+const PORT = Number(process.env.DECKWORKS_PORT ?? process.env.PORT ?? 3000);
 const app = new DeckworksApp();
 await app.init(PROJECT_DIR);
 
@@ -29,7 +30,52 @@ function saveImage(dir: string, name: string, dataUrl: string): Promise<string |
     .then(() => `${dir}/${fileName}`);
 }
 
+type FileEntry = {
+  path: string;
+  name: string;
+  dir: string;
+  ext: string;
+  size: number;
+};
+
+// The file viewer only surfaces plain text and Markdown sources.
+const VIEWABLE_EXT = new Set(["md", "txt"]);
+
+async function walkFiles(absDir: string, relDir: string, out: FileEntry[]): Promise<void> {
+  let entries;
+  try {
+    entries = await readdir(absDir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
+    const abs = join(absDir, entry.name);
+    const rel = relDir ? `${relDir}/${entry.name}` : entry.name;
+    if (entry.isDirectory()) {
+      await walkFiles(abs, rel, out);
+    } else if (entry.isFile()) {
+      const ext = entry.name.split(".").pop()?.toLowerCase() ?? "";
+      if (!VIEWABLE_EXT.has(ext)) continue;
+      const info = await stat(abs).catch(() => null);
+      out.push({ path: rel, name: entry.name, dir: relDir, ext, size: info?.size ?? 0 });
+    }
+  }
+}
+
+/** Resolve a project-relative path, rejecting traversal and non-viewable files. */
+function resolveViewable(rel: string): string | null {
+  if (!rel || rel.includes("\0")) return null;
+  const root = resolve(PROJECT_DIR);
+  const abs = resolve(root, rel);
+  if (abs !== root && !abs.startsWith(root + sep)) return null;
+  const ext = abs.split(".").pop()?.toLowerCase() ?? "";
+  if (!VIEWABLE_EXT.has(ext)) return null;
+  return abs;
+}
+
 const server = serve({
+  port: PORT,
   routes: {
     // Serve index.html for all unmatched routes.
     "/*": index,
@@ -46,6 +92,22 @@ const server = serve({
     "/api/presentation": {
       async GET() {
         return Response.json({ presentation: app.state });
+      },
+      async PUT(req) {
+        try {
+          const body = (await req.json()) as { presentation?: Presentation };
+          if (!body.presentation?.slides) {
+            return Response.json({ error: "presentation is required" }, { status: 400 });
+          }
+          Object.assign(app.state, body.presentation);
+          await app.save();
+          return Response.json({ presentation: app.state });
+        } catch (err) {
+          return Response.json(
+            { error: err instanceof Error ? err.message : "Unknown error" },
+            { status: 400 }
+          );
+        }
       },
     },
 
@@ -183,6 +245,33 @@ const server = serve({
         }
       },
     },
+
+    // List the .md / .txt files under the project directory for the file viewer.
+    "/api/files": {
+      async GET() {
+        const files: FileEntry[] = [];
+        await walkFiles(resolve(PROJECT_DIR), "", files);
+        files.sort((a, b) => a.path.localeCompare(b.path));
+        return Response.json({ files });
+      },
+    },
+
+    // Read a single .md / .txt file from the project directory.
+    "/api/file": {
+      async GET(req) {
+        const rel = new URL(req.url).searchParams.get("path");
+        const abs = rel ? resolveViewable(rel) : null;
+        if (!abs || !rel) {
+          return Response.json({ error: "invalid path" }, { status: 400 });
+        }
+        try {
+          const content = await Bun.file(abs).text();
+          return Response.json({ path: rel, content });
+        } catch {
+          return Response.json({ error: "file not found" }, { status: 404 });
+        }
+      },
+    },
   },
 
   development: process.env.NODE_ENV !== "production" && {
@@ -191,5 +280,5 @@ const server = serve({
   },
 });
 
-console.log(`🚀 Deckworks running at ${server.url}`);
+console.log(`🚀 Deckworks running at ${server.url} (port ${PORT})`);
 console.log(`📁 Project dir: ${PROJECT_DIR}`);

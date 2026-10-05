@@ -6,17 +6,17 @@ import type { Element, Presentation, Slide, Theme } from "@deckworks/core";
 /**
  * The single shared stylesheet that rules every slide. It lives in the spec
  * directory so all looks, the MCP server and the frontend can agree on it.
- * Override its location with DECKWORKS_SPECS_DIR for bundled installs.
+ * Override its location with DECKWORKS_SANDBOX_DIR for bundled installs.
  */
-const SPECS_DIR =
-  process.env.DECKWORKS_SPECS_DIR ??
-  resolve(import.meta.dir, "../../../backend/shared/specs");
+const SANDBOX_DIR =
+  process.env.DECKWORKS_SANDBOX_DIR ??
+  resolve(import.meta.dir, "../../../backend/shared/sandbox");
 
 let sharedCssCache: string | null = null;
 function sharedCss(): string {
   if (sharedCssCache !== null) return sharedCssCache;
   try {
-    sharedCssCache = readFileSync(join(SPECS_DIR, "slide.css"), "utf8");
+    sharedCssCache = readFileSync(join(SANDBOX_DIR, "slide.css"), "utf8");
   } catch {
     sharedCssCache = FALLBACK_CSS;
   }
@@ -24,9 +24,10 @@ function sharedCss(): string {
 }
 
 /**
- * Anthropic Sans, embedded as base64 data URIs so exported documents (and the
- * PDF printed from them by headless Chrome) render the deck's real typeface
- * without depending on fonts installed on the machine.
+ * The bundled Anthropic Sans files remain an export-safe fallback. Each look
+ * supplies its own primary `theme.font` stack; the browser uses that stack
+ * first and falls back to these embedded files when the requested font is not
+ * installed in the export environment.
  */
 const FONT_DIR = resolve(import.meta.dir, "../assets/fonts");
 const FONT_FILES: [number, string][] = [
@@ -277,8 +278,12 @@ function elementHtml(el: Element): string {
   switch (el.type) {
     case "title":
     case "subtitle":
-    case "body":
     case "table":
+      return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
+    case "body":
+      if (el.properties.variant === "sources") {
+        return structuredSourcesBodyHtml(el, base, cls);
+      }
       return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
     case "callout":
       return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
@@ -300,6 +305,50 @@ function elementHtml(el: Element): string {
     default:
       return "";
   }
+}
+
+type SourcePoint = { label: string; text: string };
+
+function sourcePoints(value: unknown): SourcePoint[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const record = item as Record<string, unknown>;
+    if (typeof record.label !== "string" || typeof record.text !== "string") return [];
+    return [{ label: record.label, text: record.text }];
+  });
+}
+
+function structuredSourcesBodyHtml(
+  element: Element,
+  base: string,
+  cls: string
+): string {
+  const points = sourcePoints(element.properties.points);
+  const definitions = sourcePoints(element.properties.definitions);
+  const disclaimer = String(
+    element.properties.disclaimer ??
+      "This deck is a research summary, not investment advice."
+  );
+  const pointHtml = points
+    .map(
+      (point) =>
+        `<div class="slide-source-point"><span class="slide-source-point__mark" aria-hidden="true"></span><span><span class="slide-source-point__label">${escapeHtml(point.label)}</span><span class="slide-source-point__text">${escapeHtml(point.text)}</span></span></div>`
+    )
+    .join("");
+  const definitionHtml = definitions
+    .map(
+      (definition) =>
+        `<div class="slide-definition"><span class="slide-definition__label">${escapeHtml(definition.label)}</span><span class="slide-definition__text">${escapeHtml(definition.text)}</span></div>`
+    )
+    .join("");
+
+  return `<div class="${cls} slide-body--sources" style="${base}">
+    <div class="slide-sources__eyebrow">Sources</div>
+    <div class="slide-sources__points">${pointHtml}</div>
+    <div class="slide-sources__definitions"><div class="slide-sources__eyebrow">Definitions</div>${definitionHtml}</div>
+    <div class="slide-sources__disclaimer">${escapeHtml(disclaimer)}</div>
+  </div>`;
 }
 
 export function escapeHtml(value: string): string {

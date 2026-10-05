@@ -3,6 +3,8 @@ import type { Material, MaterialKind } from "./types";
 const EXT_KIND: Record<string, MaterialKind> = {
   csv: "csv",
   pdf: "pdf",
+  html: "html",
+  htm: "html",
   md: "md",
   markdown: "md",
 };
@@ -41,7 +43,7 @@ export async function fileToMaterial(file: File): Promise<Material | null> {
     size: file.size,
   };
 
-  if (kind === "csv" || kind === "md") {
+  if (kind === "csv" || kind === "md" || kind === "html") {
     material.text = await file.text();
   } else if (kind === "image") {
     material.dataUrl = await readAsDataURL(file);

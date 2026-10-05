@@ -1,5 +1,7 @@
 import "@fontsource-variable/newsreader";
 import "@fontsource-variable/geist-mono";
+import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource-variable/source-sans-3";
 
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";

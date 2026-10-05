@@ -16,6 +16,8 @@ import { compileSlidesFromDir } from "./exportHtml.js";
 const CANDIDATES = [
   process.env.DECKWORKS_CHROME,
   process.env.CHROME_BIN,
+  "/usr/bin/google-chrome",
+  "/usr/bin/google-chrome-stable",
   "google-chrome",
   "google-chrome-stable",
   "chromium",
@@ -67,12 +69,20 @@ export async function renderPresentationPdfViaChrome(
 
   try {
     await writeFile(htmlPath, html, "utf8");
+    const profileDir = join(dir, "chrome-profile");
     const code = await run(chrome, [
       "--headless=new",
       "--no-sandbox",
       "--disable-gpu",
+      "--disable-crash-reporter",
+      "--disable-breakpad",
+      "--disable-dev-shm-usage",
+      "--disable-features=Crashpad",
+      "--no-first-run",
+      "--no-default-browser-check",
       "--hide-scrollbars",
       "--no-pdf-header-footer",
+      `--user-data-dir=${profileDir}`,
       `--print-to-pdf=${pdfPath}`,
       `file://${htmlPath}`,
     ]);

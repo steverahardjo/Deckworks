@@ -8,7 +8,7 @@
 // images, and web links. These live in the frontend store for now and will be
 // surfaced to the MCP `deck_new` tool once parsing/generation is wired up.
 
-export type MaterialKind = "csv" | "pdf" | "md" | "image" | "link";
+export type MaterialKind = "csv" | "pdf" | "html" | "md" | "image" | "link";
 
 /** Whether a material was added this session or already existed in the opened directory. */
 export type MaterialOrigin = "added" | "existing";

@@ -146,7 +146,7 @@ export function registerEditingTools(server: McpServer, app: DeckworksApp) {
     "change_styling",
     {
       description:
-        "Change deck-wide styling. Pass a look/preset id (accent, academic, c4e, consulting, corporate, dark, deloitte, editorial, minimal, mckinsey, startup, travel) to apply that spec's palette; omit it to read the current styling. One shared stylesheet (specs/slide.css) rules every slide — styling is never per slide.",
+        "Change deck-wide styling. Pass a runtime-discovered look id to apply its palette; omit it to read current styling. One shared stylesheet (sandbox/slide.css) rules every slide — styling is never per slide.",
       inputSchema: {
         style: z
           .string()

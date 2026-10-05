@@ -38,6 +38,7 @@ export interface Slide {
   id: string;
   layout: SlideLayout;
   elements: Element[];
+  notes?: string;
   screenshot?: string;
 }
 
@@ -80,6 +81,8 @@ export interface Presentation {
   dimensions: Dimensions;
   theme: Theme;
   template: string;
+  /** The operating mode selected for the current deck run. */
+  workflow?: string;
   slides: Slide[];
   comments: Comment[];
 }

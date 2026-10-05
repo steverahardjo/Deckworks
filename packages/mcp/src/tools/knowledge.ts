@@ -4,8 +4,11 @@ import type { DeckworksApp } from "@deckworks/core/store";
 
 import {
   SKILLS_DIR,
-  SPECS_DIR,
+  LOOK_SPECS_DIR,
+  WORKFLOW_SPECS_DIR,
   listMarkdown,
+  listLooks,
+  listWorkflows,
   readDocument,
   readmeDescriptions,
 } from "./assets.js";
@@ -48,18 +51,20 @@ const PRESENTATION_SCHEMA = {
       },
     },
     template: { type: "string" },
+    workflow: { type: "string" },
     slides: {
       type: "array",
       items: {
         type: "object",
         required: ["id", "layout", "elements"],
-        properties: {
-          id: { type: "string" },
-          layout: {
+          properties: {
+            id: { type: "string" },
+            layout: {
             type: "string",
             enum: ["title", "title-subtitle", "title-body", "two-column", "blank"],
-          },
-          elements: {
+              },
+              notes: { type: "string" },
+              elements: {
             type: "array",
             items: {
               type: "object",
@@ -122,28 +127,10 @@ const PRESENTATION_SCHEMA = {
   },
 } as const;
 
-const INSTRUCTIONS = [
-  "Deckworks is an agent-native presentation workspace. The presentation state (deck.json) is the source of truth.",
-  "Recommended workflow:",
-  "1. deck_init or deck_open to load a project.",
-  "2. list_slide to inspect the current slides (page, id, layout, elements).",
-  "3. deck_list_skills, then deck_load_skill for the phase you are in (setup | create | edit | review | export).",
-  "4. deck_list_looks, then deck_load_look for the chosen look before writing any slides.",
-  "5. change_styling to apply the deck-wide look, then deck_get_schema to recall the data model.",
-  "6. add_slide to build and change_slide(slide, page) to edit slides.",
-  "7. deck_save to persist changes.",
-  "8. deck_preview to render slides; deck_review to find layout, overflow and density problems.",
-  "9. deck_export for html, pdf or pptx output.",
-  "Styling is deck-wide: ONE shared stylesheet (backend/shared/specs/slide.css) rules every slide. Never style slides individually — slides differ only by content, layout and position. Use change_styling for the whole deck.",
-  "Before building slides, collect every visual asset you need — SVG, chart, widget and icon — as element properties (chart/image `properties.svg`, image `properties.src`) so exhibits are first-class.",
-  "Load the phase skill before acting — the skills encode the constraints that keep a deck consistent.",
-  "Load the look spec before writing slides — it defines the palette usage, layout grid and density ceiling for that look.",
-  "Progressive disclosure: load ONLY the skill for your current phase and ONLY the one chosen look's spec. Never load all skills or all specs at once.",
-  "Human-in-the-loop: pause at setup (confirm look + required assets such as a logo SVG), after the narrative plan, after the first draft, and before export. Do not run past a gate unattended.",
-  "Data analysis: default to Anthropic's Claude Code data-analysis skill (claude plugins add knowledge-work-plugins/data) and set chart SVGs to the Anthropic Sans font stack.",
-  "At setup, write a per-run reference file (<project>/references.md) recording the chosen look, palette, grid, density ceiling, assets and sources.",
-  "title, subtitle, body, chart and image elements render. deck_review warns when a deck uses an element type that renders as nothing.",
-].join("\n");
+const INSTRUCTIONS =
+  "Load backend/shared/skills/SKILL.md first. Route exactly one workflow, persist it with " +
+  "deck_set_workflow, then load that workflow from /spec/workflow and one look from " +
+  "/spec/look. deck.json remains the source of truth.";
 
 export function registerKnowledgeTools(server: McpServer, app: DeckworksApp) {
   server.registerTool(
@@ -163,10 +150,23 @@ export function registerKnowledgeTools(server: McpServer, app: DeckworksApp) {
   );
 
   server.registerTool(
+    "deck_list_specs",
+    {
+      description: "Return the runtime-discovered workflow and look choices under /spec.",
+    },
+    async () =>
+      guard(async () => ({
+        specDir: WORKFLOW_SPECS_DIR.replace(/[/\\]workflow$/, ""),
+        workflows: await listWorkflows(),
+        looks: await listLooks(),
+      }))
+  );
+
+  server.registerTool(
     "deck_list_skills",
     {
       description:
-        "List the Deckworks agent skills available for loading, with the phase each one covers. Call this before deck_load_skill.",
+        "List runtime-discovered Deckworks skills. SKILL.md is the main workflow and data-analysis.md is the optional analysis companion.",
     },
     async () =>
       guard(async () => {
@@ -187,9 +187,9 @@ export function registerKnowledgeTools(server: McpServer, app: DeckworksApp) {
     "deck_load_skill",
     {
       description:
-        "Load a Deckworks agent skill (setup | create | edit | review | export). Returns the full Markdown instructions for that phase of the deck workflow.",
+        "Load a runtime-discovered Deckworks skill. Use SKILL.md for the main workflow or data-analysis.md for analysis.",
       inputSchema: {
-        skill: z.string().describe("Skill name, e.g. setup, create, edit, review, export."),
+        skill: z.string().describe("Skill name, e.g. SKILL or data-analysis."),
       },
     },
     async (args) =>
@@ -199,21 +199,53 @@ export function registerKnowledgeTools(server: McpServer, app: DeckworksApp) {
       })
   );
 
-  // Look specs are per-preset design guidance (palette, typography, layout and
-  // density rules). They are separate from workflow skills: a skill says *what
-  // to do next*, a spec says *how that look should be designed*.
+  server.registerTool(
+    "deck_list_workflows",
+    {
+      description: "List workflow specs discovered at runtime from /spec/workflow.",
+    },
+    async () =>
+      guard(async () => {
+        const names = await listWorkflows();
+        const descriptions = await readmeDescriptions(WORKFLOW_SPECS_DIR);
+        return {
+          workflowsDir: WORKFLOW_SPECS_DIR,
+          workflows: names.map((name) => ({
+            id: name,
+            file: `${name}.md`,
+            summary: descriptions.get(name) ?? null,
+          })),
+        };
+      })
+  );
+
+  server.registerTool(
+    "deck_load_workflow",
+    {
+      description: "Load one runtime-discovered workflow spec from /spec/workflow.",
+      inputSchema: {
+        workflow: z.string().describe("Workflow id, e.g. create."),
+      },
+    },
+    async (args) =>
+      guard(async () =>
+        readDocument(WORKFLOW_SPECS_DIR, "workflow spec", args.workflow, await listWorkflows())
+      )
+  );
+
+  // Look specs own palette, font, grid and rendered component guidance.
   server.registerTool(
     "deck_list_looks",
     {
       description:
-        "List the presentation looks (theme presets) that have a design spec available, for use with deck_load_look and deck_new.",
+        "List presentation looks discovered at runtime from /spec/look.",
     },
     async () =>
       guard(async () => {
-        const names = await listMarkdown(SPECS_DIR, "Look specs");
-        const descriptions = await readmeDescriptions(SPECS_DIR);
+        const names = await listLooks();
+        const descriptions = await readmeDescriptions(LOOK_SPECS_DIR);
         return {
-          specsDir: SPECS_DIR,
+          looksDir: LOOK_SPECS_DIR,
           looks: names.map((name) => ({
             id: name,
             file: `${name}.md`,
@@ -227,15 +259,15 @@ export function registerKnowledgeTools(server: McpServer, app: DeckworksApp) {
     "deck_load_look",
     {
       description:
-        "Load the design spec for a presentation look (e.g. consulting, dark, editorial). Read this before writing slides so the deck follows that look's palette, typography and layout rules.",
+        "Load one design spec from /spec/look. It defines palette, font, grid, density, and rendered components for that look.",
       inputSchema: {
         look: z.string().describe("Look / preset id, e.g. consulting."),
       },
     },
     async (args) =>
       guard(async () => {
-        const names = await listMarkdown(SPECS_DIR, "Look specs");
-        return readDocument(SPECS_DIR, "look spec", args.look, names);
+        const names = await listLooks();
+        return readDocument(LOOK_SPECS_DIR, "look spec", args.look, names);
       })
   );
 }

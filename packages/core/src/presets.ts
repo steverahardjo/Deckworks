@@ -1,6 +1,9 @@
 import type { Preset, Theme } from "./types.js";
 
-const font = '"Anthropic Sans Text", "Inter Variable", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+const sans = '"Source Sans 3", "Anthropic Sans Text", "Helvetica Neue", Arial, sans-serif';
+const humanist = '"Plus Jakarta Sans", "Anthropic Sans Text", "Helvetica Neue", Arial, sans-serif';
+const serif = '"Newsreader Variable", "Anthropic Sans Text", Georgia, "Times New Roman", serif';
+const mono = '"Geist Mono Variable", "Anthropic Sans Text", "SFMono-Regular", Consolas, monospace';
 
 export const themes = {
   minimal: {
@@ -10,7 +13,7 @@ export const themes = {
     foreground: "#18181b",
     accent: "#18181b",
     muted: "#71717a",
-    font,
+    font: humanist,
   },
   consulting: {
     id: "consulting",
@@ -19,7 +22,7 @@ export const themes = {
     foreground: "#0f172a",
     accent: "#2563eb",
     muted: "#64748b",
-    font,
+    font: sans,
   },
   corporate: {
     id: "corporate",
@@ -28,7 +31,7 @@ export const themes = {
     foreground: "#1e293b",
     accent: "#0f766e",
     muted: "#64748b",
-    font,
+    font: sans,
   },
   dark: {
     id: "dark",
@@ -37,7 +40,7 @@ export const themes = {
     foreground: "#e5e7eb",
     accent: "#8b5cf6",
     muted: "#94a3b8",
-    font,
+    font: humanist,
   },
   editorial: {
     id: "editorial",
@@ -46,7 +49,7 @@ export const themes = {
     foreground: "#1c1917",
     accent: "#8a5a2b",
     muted: "#78716c",
-    font,
+    font: serif,
   },
   academic: {
     id: "academic",
@@ -55,7 +58,7 @@ export const themes = {
     foreground: "#0f1e3d",
     accent: "#1d4ed8",
     muted: "#64748b",
-    font,
+    font: sans,
   },
   startup: {
     id: "startup",
@@ -64,7 +67,7 @@ export const themes = {
     foreground: "#e6edf7",
     accent: "#14b8a6",
     muted: "#8aa0b8",
-    font,
+    font: humanist,
   },
   mckinsey: {
     id: "mckinsey",
@@ -73,7 +76,7 @@ export const themes = {
     foreground: "#051c2c",
     accent: "#2251ff",
     muted: "#4e5b66",
-    font,
+    font: sans,
   },
   deloitte: {
     id: "deloitte",
@@ -82,7 +85,7 @@ export const themes = {
     foreground: "#000000",
     accent: "#86bc25",
     muted: "#53565a",
-    font,
+    font: sans,
   },
   c4e: {
     id: "c4e",
@@ -91,7 +94,7 @@ export const themes = {
     foreground: "#0b0b0b",
     accent: "#0000dc",
     muted: "#5a5a5a",
-    font,
+    font: mono,
   },
   travel: {
     id: "travel",
@@ -100,7 +103,7 @@ export const themes = {
     foreground: "#1e3a2f",
     accent: "#43a047",
     muted: "#5c6f62",
-    font,
+    font: serif,
   },
 } satisfies Record<string, Theme>;
 

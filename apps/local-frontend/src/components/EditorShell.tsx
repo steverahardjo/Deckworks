@@ -5,10 +5,14 @@ import { SlideRail } from "./SlideRail";
 import { Slides } from "./Slides";
 import { PresetPanel } from "./PresetPanel";
 import { useAppDispatch } from "@/state/store";
+import { useAppState } from "@/state/store";
 import type { Comment } from "@deckworks/core";
+import { SpeakerNotes } from "./SpeakerNotes";
+import { FilesPanel } from "./FilesPanel";
 
 export function EditorShell() {
   const dispatch = useAppDispatch();
+  const { activeSlideId } = useAppState();
 
   useEffect(() => {
     let cancelled = false;
@@ -32,6 +36,8 @@ export function EditorShell() {
         <Slides />
         <PresetPanel />
       </div>
+      <SpeakerNotes slideId={activeSlideId} />
+      <FilesPanel />
     </div>
   );
 }

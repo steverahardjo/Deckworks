@@ -7,7 +7,7 @@
       "enabled": true,
       "environment": {
         "DECKWORKS_SKILLS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/backend/shared/skills",
-        "DECKWORKS_SPECS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/backend/shared/specs",
+        "DECKWORKS_SPEC_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/backend/shared/spec",
         "DECKWORKS_FONTS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/packages/export/assets/fonts"
       }
     }

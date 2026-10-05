@@ -25,6 +25,21 @@ logger = logging.getLogger("remote")
 SHARED_DIR = Path(__file__).resolve().parents[3] / "shared"
 PRESETS_PATH = SHARED_DIR / "templates" / "presets.json"
 SKILLS_DIR = SHARED_DIR / "skills"
+SPEC_DIR = SHARED_DIR / "spec"
+WORKFLOW_DIR = SPEC_DIR / "workflow"
+LOOK_DIR = SPEC_DIR / "look"
+
+
+def _markdown_files(directory: Path) -> list[str]:
+    if not directory.exists():
+        return []
+    return sorted(path.stem for path in directory.glob("*.md") if path.name.lower() != "readme.md")
+
+
+def _markdown_path(directory: Path, name: str) -> Path | None:
+    if not name or "/" in name or "\\" in name:
+        return None
+    return next((path for path in directory.glob("*.md") if path.stem.lower() == name.lower()), None)
 
 
 def create_app(settings: Settings | None = None, *, auth_service: AuthService | None = None) -> FastAPI:
@@ -121,9 +136,25 @@ def create_app(settings: Settings | None = None, *, auth_service: AuthService | 
 
     @app.get("/skills/{name}")
     async def skill(name: str):
-        path = SKILLS_DIR / f"{name}.md"
-        if not path.exists():
+        path = _markdown_path(SKILLS_DIR, name)
+        if path is None:
             raise HTTPException(status_code=404, detail="skill not found")
+        return path.read_text()
+
+    @app.get("/spec")
+    async def specs():
+        return {
+            "specDir": str(SPEC_DIR),
+            "workflows": _markdown_files(WORKFLOW_DIR),
+            "looks": _markdown_files(LOOK_DIR),
+        }
+
+    @app.get("/spec/{kind}/{name}")
+    async def spec(kind: str, name: str):
+        directory = {"workflow": WORKFLOW_DIR, "look": LOOK_DIR}.get(kind)
+        path = _markdown_path(directory, name) if directory else None
+        if path is None:
+            raise HTTPException(status_code=404, detail="spec not found")
         return path.read_text()
 
     # --- protected deck features ---

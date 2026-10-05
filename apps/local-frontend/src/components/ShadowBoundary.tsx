@@ -9,7 +9,7 @@ const RESET_CSS = `
 /**
  * Collect the shared slide stylesheet from the document and return it as text.
  *
- * The single stylesheet (backend/shared/specs/slide.css) is loaded into the
+ * The single stylesheet (backend/shared/sandbox/slide.css) is loaded into the
  * document by SlideSurface. Document CSS does not cross into a shadow root, so
  * the main slide preview would render unstyled (elements fall back to normal
  * document flow). We re-inject the same rules — selected by their `.slide-`

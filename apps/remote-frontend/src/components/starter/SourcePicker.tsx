@@ -11,11 +11,12 @@ import type { MaterialKind } from "@/state/types";
 const KIND_ACCEPT: Partial<Record<MaterialKind, string>> = {
   csv: ".csv,text/csv",
   pdf: ".pdf,application/pdf",
+  html: ".html,.htm,text/html",
   md: ".md,.markdown,text/markdown",
   image: "image/*",
 };
 
-const QUICK_KINDS: MaterialKind[] = ["csv", "pdf", "md", "image"];
+const QUICK_KINDS: MaterialKind[] = ["csv", "pdf", "html", "md", "image"];
 
 export function SourcePicker() {
   const { materials } = useAppState();
@@ -113,6 +114,7 @@ export function SourcePicker() {
               key={m.id}
               material={m}
               onRemove={(id) => dispatch({ type: "remove-material", id })}
+              onOpen={m.kind === "md" ? (id) => dispatch({ type: "open-material", id }) : undefined}
             />
           ))}
         </ul>

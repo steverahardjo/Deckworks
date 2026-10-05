@@ -50,7 +50,8 @@ def test_protected_routes_reject_garbage_token(client, method, path):
 
 def test_shared_assets_are_public(client):
     assert client.get("/presets").status_code == 200
-    assert client.get("/skills/review").status_code == 200
+    assert client.get("/skills/SKILL").status_code == 200
+    assert client.get("/spec/workflow/review").status_code == 200
 
 
 def test_create_project_and_owner_reads_deck(client):

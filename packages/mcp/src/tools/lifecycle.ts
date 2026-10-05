@@ -2,7 +2,20 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DeckworksApp } from "@deckworks/core/store";
 
+import { listWorkflows } from "./assets.js";
 import { guard } from "./util.js";
+
+async function requireWorkflow(workflow: string): Promise<string> {
+  const normalized = workflow.trim().toLowerCase();
+  const available = await listWorkflows();
+  const match = available.find((candidate) => candidate.toLowerCase() === normalized);
+  if (!match) {
+    throw new Error(
+      `Unknown workflow "${workflow}". Available workflows: ${available.join(", ") || "(none found)"}.`
+    );
+  }
+  return match;
+}
 
 export function registerLifecycleTools(server: McpServer, app: DeckworksApp) {
   server.registerTool(
@@ -27,12 +40,18 @@ export function registerLifecycleTools(server: McpServer, app: DeckworksApp) {
           .optional()
           .describe("Template id: minimal | consulting | corporate | dark."),
         title: z.string().optional().describe("Presentation title."),
+        workflow: z
+          .string()
+          .optional()
+          .describe("Workflow id from deck_list_workflows, e.g. create or review."),
       },
     },
     async (args) =>
-      guard(() =>
-        app.newDeck(args.path, args.template, args.title).then(() => app.status())
-      )
+      guard(async () => {
+        const workflow = args.workflow ? await requireWorkflow(args.workflow) : undefined;
+        await app.newDeck(args.path, args.template, args.title, workflow);
+        return app.status();
+      })
   );
 
   server.registerTool(
@@ -50,5 +69,22 @@ export function registerLifecycleTools(server: McpServer, app: DeckworksApp) {
       description: "Report the current state of the active presentation.",
     },
     async () => guard(() => app.status())
+  );
+
+  server.registerTool(
+    "deck_set_workflow",
+    {
+      description:
+        "Select and persist the operating workflow for the active project. Choose the id from deck_list_workflows first.",
+      inputSchema: {
+        workflow: z.string().describe("Workflow id, e.g. create, edit, review, or export."),
+      },
+    },
+    async (args) =>
+      guard(async () => {
+        const workflow = await requireWorkflow(args.workflow);
+        await app.setWorkflow(workflow);
+        return app.status();
+      })
   );
 }

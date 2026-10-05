@@ -11,5 +11,6 @@
       "@deckworks/export/pdf": ["../../packages/export/src/exportPdf.tsx"],
       "@deckworks/export/ops": ["../../packages/export/src/ops.ts"]
     }
-  }
+  },
+  "exclude": ["../../dist", "../../node_modules"]
 }

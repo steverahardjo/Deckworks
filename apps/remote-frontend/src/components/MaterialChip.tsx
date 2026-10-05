@@ -5,6 +5,7 @@ import type { Material, MaterialKind } from "@/state/types";
 export const KIND_LABEL: Record<MaterialKind, string> = {
   csv: "CSV",
   pdf: "PDF",
+  html: "HTML",
   md: "Markdown",
   image: "Image",
   link: "Link",
@@ -13,6 +14,7 @@ export const KIND_LABEL: Record<MaterialKind, string> = {
 const KIND_ICON: Record<MaterialKind, Icon> = {
   csv: FileCsv,
   pdf: FileText,
+  html: FileCode,
   md: FileCode,
   image: Image,
   link: Link,
@@ -34,14 +36,23 @@ export function MaterialKindIcon({
 export function MaterialChip({
   material,
   onRemove,
+  onOpen,
 }: {
   material: Material;
   onRemove: (id: string) => void;
+  onOpen?: (id: string) => void;
 }) {
   return (
     <li className="flex items-center gap-2 rounded-md border border-border bg-card py-1 pl-2 pr-1 text-sm">
-      <MaterialKindIcon kind={material.kind} className="text-muted-foreground" />
-      <span className="max-w-[16rem] truncate">{material.name}</span>
+      <button
+        type="button"
+        className="flex min-w-0 items-center gap-2 text-left hover:text-ring"
+        onClick={() => onOpen?.(material.id)}
+        aria-label={onOpen ? `Open ${material.name}` : material.name}
+      >
+        <MaterialKindIcon kind={material.kind} className="shrink-0 text-muted-foreground" />
+        <span className="max-w-[16rem] truncate">{material.name}</span>
+      </button>
       {material.size != null && (
         <span className="text-xs text-muted-foreground">
           {formatSize(material.size)}
