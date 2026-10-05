@@ -35,11 +35,23 @@ type FileEntry = {
   name: string;
   dir: string;
   ext: string;
+  kind: "text" | "image";
   size: number;
+  mtime: number;
 };
 
-// The file viewer only surfaces plain text and Markdown sources.
-const VIEWABLE_EXT = new Set(["md", "txt"]);
+// The file viewer surfaces plain text / Markdown sources and images.
+const TEXT_EXT = new Set(["md", "txt"]);
+const IMAGE_EXT = new Set(["svg", "png", "jpg", "jpeg", "gif", "webp"]);
+
+const IMAGE_MIME: Record<string, string> = {
+  svg: "image/svg+xml",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+};
 
 async function walkFiles(absDir: string, relDir: string, out: FileEntry[]): Promise<void> {
   let entries;
@@ -56,21 +68,32 @@ async function walkFiles(absDir: string, relDir: string, out: FileEntry[]): Prom
       await walkFiles(abs, rel, out);
     } else if (entry.isFile()) {
       const ext = entry.name.split(".").pop()?.toLowerCase() ?? "";
-      if (!VIEWABLE_EXT.has(ext)) continue;
+      const kind: FileEntry["kind"] | null = IMAGE_EXT.has(ext)
+        ? "image"
+        : TEXT_EXT.has(ext)
+          ? "text"
+          : null;
+      if (!kind) continue;
       const info = await stat(abs).catch(() => null);
-      out.push({ path: rel, name: entry.name, dir: relDir, ext, size: info?.size ?? 0 });
+      out.push({
+        path: rel,
+        name: entry.name,
+        dir: relDir,
+        ext,
+        kind,
+        size: info?.size ?? 0,
+        mtime: info?.mtimeMs ?? 0,
+      });
     }
   }
 }
 
-/** Resolve a project-relative path, rejecting traversal and non-viewable files. */
-function resolveViewable(rel: string): string | null {
+/** Resolve a project-relative path, rejecting traversal. */
+function resolveInProject(rel: string): string | null {
   if (!rel || rel.includes("\0")) return null;
   const root = resolve(PROJECT_DIR);
   const abs = resolve(root, rel);
   if (abs !== root && !abs.startsWith(root + sep)) return null;
-  const ext = abs.split(".").pop()?.toLowerCase() ?? "";
-  if (!VIEWABLE_EXT.has(ext)) return null;
   return abs;
 }
 
@@ -246,7 +269,7 @@ const server = serve({
       },
     },
 
-    // List the .md / .txt files under the project directory for the file viewer.
+    // List the viewable files (text + images) under the project directory.
     "/api/files": {
       async GET() {
         const files: FileEntry[] = [];
@@ -260,13 +283,34 @@ const server = serve({
     "/api/file": {
       async GET(req) {
         const rel = new URL(req.url).searchParams.get("path");
-        const abs = rel ? resolveViewable(rel) : null;
-        if (!abs || !rel) {
+        const abs = rel ? resolveInProject(rel) : null;
+        const ext = abs?.split(".").pop()?.toLowerCase() ?? "";
+        if (!abs || !rel || !TEXT_EXT.has(ext)) {
           return Response.json({ error: "invalid path" }, { status: 400 });
         }
         try {
           const content = await Bun.file(abs).text();
           return Response.json({ path: rel, content });
+        } catch {
+          return Response.json({ error: "file not found" }, { status: 404 });
+        }
+      },
+    },
+
+    // Stream an image file (svg/png/jpg/gif/webp) from the project directory.
+    "/api/raw": {
+      async GET(req) {
+        const rel = new URL(req.url).searchParams.get("path");
+        const abs = rel ? resolveInProject(rel) : null;
+        const ext = abs?.split(".").pop()?.toLowerCase() ?? "";
+        const mime = ext ? IMAGE_MIME[ext] : undefined;
+        if (!abs || !rel || !mime) {
+          return Response.json({ error: "invalid path" }, { status: 400 });
+        }
+        try {
+          return new Response(Bun.file(abs), {
+            headers: { "Content-Type": mime },
+          });
         } catch {
           return Response.json({ error: "file not found" }, { status: 404 });
         }

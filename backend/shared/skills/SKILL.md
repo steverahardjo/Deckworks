@@ -49,6 +49,7 @@ After routing:
 ## 2. Respect artifact authority
 
 Each run artifact has one job. Keep the boundaries explicit.
+Open a tmp/ in the folder you are in or ask for user file dir they wish to use. 
 
 | Artifact | Authority |
 | --- | --- |
