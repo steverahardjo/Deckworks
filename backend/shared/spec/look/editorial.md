@@ -7,6 +7,7 @@
 | **Foreground** | `#1c1917` |
 | **Accent** | `#8a5a2b` |
 | **Muted** | `#78716c` |
+| **Font** | `"Newsreader Variable", "Anthropic Sans Text", Georgia, "Times New Roman", serif` |
 
 ## Character
 

@@ -40,7 +40,8 @@ never load every look into the same generation context.
 Each look spec must document:
 
 - identity and intended audience;
-- background, foreground, accent, muted colors, and font stack;
+- a header table with `id`, `Background`, `Foreground`, `Accent`, `Muted`, and
+  `Font` — the runtime parses this into the look's theme and preset;
 - safe area, grid, and density ceiling;
 - supported rendered components and their visual treatment;
 - required user-provided and agent-researched assets.
@@ -49,6 +50,10 @@ Each look spec must document:
   diagrams, including the supported element primitives used to build them.
 - a short copyable HTML snippet for the recommended composition; snippets use
   classes from `backend/shared/sandbox/slide.css`.
+
+The header table is machine-read: both backends parse `spec/look/*.md` into the
+preset list they serve, so adding a Markdown file adds a look. There is no
+separate presets file; the look catalog order comes from `look/README.md`.
 
 `backend/shared/sandbox/slide.css` is the single shared renderer stylesheet.
 Look specs describe how to use its components; they do not add per-slide CSS.

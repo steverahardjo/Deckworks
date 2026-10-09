@@ -7,6 +7,7 @@
 | **Foreground** | `#18181b` |
 | **Accent** | `#18181b` |
 | **Muted** | `#71717a` |
+| **Font** | `"Plus Jakarta Sans", "Anthropic Sans Text", "Helvetica Neue", Arial, sans-serif` |
 
 ## Character
 

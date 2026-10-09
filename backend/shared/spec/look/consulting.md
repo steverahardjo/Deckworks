@@ -7,6 +7,7 @@
 | **Foreground** | `#0f172a` |
 | **Accent** | `#2563eb` |
 | **Muted** | `#64748b` |
+| **Font** | `"Source Sans 3", "Anthropic Sans Text", "Helvetica Neue", Arial, sans-serif` |
 
 ## Character
 
