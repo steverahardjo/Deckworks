@@ -49,13 +49,13 @@ After routing:
 ## 2. Respect artifact authority
 
 Each run artifact has one job. Keep the boundaries explicit.
-Open a tmp/ in the folder you are in or ask for user file dir they wish to use. 
+Open a $(pwd)/tmp/ in the folder you are in or ask for user file dir they wish to use. 
 
 | Artifact | Authority |
 | --- | --- |
 | `deck.json` | Presentation source of truth: metadata, look, slides, elements, notes, and comments. |
 | `deck-profile.md` | Run context: workflow, look, audience, objective, dimensions, and supported components. |
-| `scratchpad.md` | Working record: research, uncertainty, calculations, contradictions, and construction decisions. |
+| `scratchpad.md` | Working record: research, uncertainty, calculations, contradictions, construction decisions, slides contents to refer to |
 | `references.md` | Clean final registry of sources, citations, datasets, figures, and other assets used in the deck. |
 | `tmp/` | Reproducible temporary scripts, extracted text, generated charts, intermediate assets, and the rendered slide HTML + agent-authored `tmp/slide.css`. |
 | `sandbox/` | Isolated preview surface and the bundled fallback stylesheet. |
@@ -155,8 +155,9 @@ Use the following sequence unless the selected workflow narrows it:
 2. Set the deck's `theme` and `template` to the selected look.
 3. Write the deck-wide `stylesheet` field (or `tmp/slide.css`) from the look spec.
 4. Add or revise slides and elements directly in `deck.json`.
-5. `deck_review` — inspect geometry, density, support, and look compliance.
-6. `run_preview` — open the live editor at `http://localhost:<port>/slides`.
+5. `deck_review` — inspect geometry, density, support, and look compliance.'
+6. Save the each run of creation or edit in the scratchpad.md to refer later.
+7. `run_preview` — open the live editor at `http://localhost:<port>/slides`.
 
 Follow the schema exposed by `deck_get_schema` rather than guessing fields.
 
