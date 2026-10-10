@@ -55,8 +55,8 @@ The header table is machine-read: both backends parse `spec/look/*.md` into the
 preset list they serve, so adding a Markdown file adds a look. There is no
 separate presets file; the look catalog order comes from `look/README.md`.
 
-Each look spec is the agent's brief for the deck-wide stylesheet it authors with
-`deck_set_stylesheet`. The renderer emits semantic element classes
+Each look spec is the agent's brief for the deck-wide stylesheet it writes into
+the deck's `stylesheet` field. The renderer emits semantic element classes
 (`.slide-surface`, `.slide-el`, `.slide-<type>`) and publishes each element's box
 as `--slide-x/y/w/h` custom properties, so the stylesheet owns layout and the
 look spec owns the grid, type scale, palette roles, density, and component

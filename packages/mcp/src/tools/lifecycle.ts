@@ -2,62 +2,14 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DeckworksApp } from "@deckworks/core/store";
 
-import { listWorkflows } from "./assets.js";
-import { guard } from "./util.js";
-
-async function requireWorkflow(workflow: string): Promise<string> {
-  const normalized = workflow.trim().toLowerCase();
-  const available = await listWorkflows();
-  const match = available.find((candidate) => candidate.toLowerCase() === normalized);
-  if (!match) {
-    throw new Error(
-      `Unknown workflow "${workflow}". Available workflows: ${available.join(", ") || "(none found)"}.`
-    );
-  }
-  return match;
-}
+import { guard, readDeck } from "./util.js";
 
 export function registerLifecycleTools(server: McpServer, app: DeckworksApp) {
   server.registerTool(
-    "deck_init",
-    {
-      description:
-        "Initialize a Deckworks project in a directory. Creates the directory and a default deck.json if missing, then makes it the active project.",
-      inputSchema: { path: z.string().describe("Absolute path to the project directory.") },
-    },
-    async (args) => guard(() => app.init(args.path).then(() => app.status()))
-  );
-
-  server.registerTool(
-    "deck_new",
-    {
-      description:
-        "Create a new presentation in a directory. Overwrites any existing deck.json with a fresh deck using the given template.",
-      inputSchema: {
-        path: z.string().describe("Absolute path to the project directory."),
-        template: z
-          .string()
-          .optional()
-          .describe("Template id: minimal | consulting | dark | editorial | academic | startup."),
-        title: z.string().optional().describe("Presentation title."),
-        workflow: z
-          .string()
-          .optional()
-          .describe("Workflow id from deck_list_workflows, e.g. create or review."),
-      },
-    },
-    async (args) =>
-      guard(async () => {
-        const workflow = args.workflow ? await requireWorkflow(args.workflow) : undefined;
-        await app.newDeck(args.path, args.template, args.title, workflow);
-        return app.status();
-      })
-  );
-
-  server.registerTool(
     "deck_open",
     {
-      description: "Open an existing Deckworks project from a deck.json file and make it active.",
+      description:
+        "Open an existing Deckworks project from its deck.json and make it active. Author deck.json with your own file tools; the MCP only reads it.",
       inputSchema: { path: z.string().describe("Absolute path to the project directory.") },
     },
     async (args) => guard(() => app.open(args.path).then(() => app.status()))
@@ -66,25 +18,28 @@ export function registerLifecycleTools(server: McpServer, app: DeckworksApp) {
   server.registerTool(
     "deck_status",
     {
-      description: "Report the current state of the active presentation.",
-    },
-    async () => guard(() => app.status())
-  );
-
-  server.registerTool(
-    "deck_set_workflow",
-    {
       description:
-        "Select and persist the operating workflow for the active project. Choose the id from deck_list_workflows first.",
-      inputSchema: {
-        workflow: z.string().describe("Workflow id, e.g. create, edit, review, or export."),
-      },
+        "Report the current state of the active presentation, read fresh from deck.json on disk.",
     },
-    async (args) =>
+    async () =>
       guard(async () => {
-        const workflow = await requireWorkflow(args.workflow);
-        await app.setWorkflow(workflow);
-        return app.status();
+        if (!app.projectDir) return app.status();
+        const presentation = await readDeck(app.projectDir);
+        const workflow = presentation.workflow ?? "create";
+        return {
+          projectDir: app.projectDir,
+          title: presentation.metadata.title,
+          template: presentation.template,
+          workflow,
+          slideCount: presentation.slides.length,
+          slides: presentation.slides.map((s) => ({
+            id: s.id,
+            layout: s.layout,
+            elementCount: s.elements.length,
+          })),
+          openComments: (presentation.comments ?? []).filter((c) => c.status === "open").length,
+          updatedAt: presentation.metadata.updatedAt,
+        };
       })
   );
 }

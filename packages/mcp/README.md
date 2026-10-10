@@ -5,9 +5,10 @@ Deckworks exposes its whole presentation workflow to coding agents over the
 primary interface for agents such as Claude Code, OpenCode, and Codex — the web
 editor is the human-facing half of the same workflow.
 
-An agent can create a project, build and edit slides by stable id, preview them,
-review them for layout problems, and export to HTML, PDF, and PPTX — all without
-touching a browser.
+An agent authors `deck.json` directly with its own file tools, then uses the
+MCP to load runtime knowledge (schema, skills, specs, looks), check the deck for
+layout problems, run the live preview, and export to HTML, PDF, and PPTX — all
+without touching a browser.
 
 ## Requirements
 
@@ -158,34 +159,39 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 ## Tools
 
-30 tools, grouped by workflow stage.
+14 tools. The server is deliberately small: writing and editing `deck.json` is
+the agent's job (use your own file tools); the MCP resolves runtime knowledge,
+checks the result, runs the preview, and exports.
 
 | Stage | Tools |
 | --- | --- |
-| Lifecycle | `deck_init` · `deck_new` · `deck_open` · `deck_status` · `deck_set_workflow` |
+| Lifecycle | `deck_open` · `deck_status` |
 | Knowledge | `deck_get_schema` · `deck_get_instructions` · `deck_list_specs` · `deck_list_skills` · `deck_load_skill` · `deck_list_workflows` · `deck_load_workflow` · `deck_list_looks` · `deck_load_look` |
-| Editing | `deck_add_slide` · `deck_change` · `deck_delete_slide` · `deck_reorder_slide` |
-| Feedback | `deck_comment` · `deck_comments` · `deck_resolve_comment` |
-| Preview & review | `deck_preview` · `deck_open_preview` · `deck_review` |
-| Persistence & output | `deck_save` · `deck_export` |
+| Check & preview | `deck_review` · `run_preview` |
+| Output | `deck_export` |
+
+`deck_review`, `run_preview` and `deck_export` accept an optional `path`; when
+omitted they act on the project made active by `deck_open`. The checker always
+re-reads `deck.json` from disk, so it reflects edits made with your own file
+tools.
 
 ## The workflow to expect
 
 The server is deliberately workflow-oriented rather than raw CRUD. A competent
 agent run looks like this:
 
-1. `deck_init` or `deck_open` — load a project (`deck.json` is the source of truth).
+1. `deck_open` — make a project active (`deck.json` is the source of truth).
 2. `deck_list_skills` → `deck_load_skill` — load `SKILL.md` (and
    `data-analysis.md` only when analysis is needed).
-3. `deck_list_workflows` → `deck_set_workflow` → `deck_load_workflow` — select and persist the operating mode.
-4. `deck_list_looks` → `deck_load_look` — load the design spec for the chosen
-   look **before** writing slides.
-4. `deck_add_slide` and `deck_change` — build content, targeting stable element ids.
-5. `deck_save` — persist.
-6. `deck_preview` → `deck_review` — render to HTML, then check geometry, overflow,
-   overlap, unsupported elements, and density against the look spec. Use
-   `deck_open_preview` to render and automatically open the result in a browser
-   (mode `file` for `tmp/preview.html`, mode `editor` for the live local editor).
+3. `deck_list_workflows` → `deck_load_workflow`, then `deck_list_looks` →
+   `deck_load_look` — select the operating mode and design system **before**
+   writing slides.
+4. Author `deck.json` with your own file tools — build the deck by writing
+   slides and elements with stable ids.
+5. `deck_review` — check geometry, overflow, overlap, unsupported elements, and
+   density against the look spec, then fix the JSON and re-check.
+6. `run_preview` — start the local frontend and open
+   `http://localhost:<port>/slides` in a browser.
 7. `deck_export` — `html`, `pdf`, or `pptx`.
 
 ### Skills and looks are files, not code
@@ -261,5 +267,5 @@ bun run mcp        # start the server from the repository root
 
 The server implementation lives in `packages/mcp/src/`:
 `index.ts` registers the tool groups, `tools/lifecycle.ts`, `knowledge.ts`,
-`editing.ts`, `feedback.ts`, and `output.ts`, with `tools/assets.ts` resolving
+`review.ts`, `preview.ts`, and `output.ts`, with `tools/assets.ts` resolving
 the shared skill and spec directories.

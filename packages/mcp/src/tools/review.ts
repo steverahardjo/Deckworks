@@ -1,19 +1,11 @@
-import { writeFile } from "node:fs/promises";
-import { join } from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DeckworksApp } from "@deckworks/core/store";
-import type { Comment, Element, Presentation, Slide } from "@deckworks/core";
-import {
-  TYPE_SCALE,
-  compileSlidesFromDir,
-  writeSlideFiles,
-} from "@deckworks/export/html";
+import type { Element, Presentation } from "@deckworks/core";
+import { TYPE_SCALE } from "@deckworks/export/html";
 
 import { readLookSpec } from "./assets.js";
-import { guard, openInBrowser } from "./util.js";
-
-let commentSeq = 0;
+import { guard, readDeck, resolveProjectDir } from "./util.js";
 
 /** Element types the renderer actually draws. Everything else renders as "". */
 const RENDERABLE_TYPES = new Set(["title", "subtitle", "body", "chart", "image"]);
@@ -105,7 +97,7 @@ function reviewPresentation(
       severity: "info",
       slideId: "-",
       problem: "The presentation has no slides.",
-      fix: "Add slides with deck_add_slide before previewing or exporting.",
+      fix: "Add slides to deck.json before previewing or exporting.",
     });
     return findings;
   }
@@ -251,246 +243,41 @@ function reviewPresentation(
   return findings;
 }
 
-async function renderPreviewFiles(
-  presentation: Presentation,
-  projectDir: string,
-  merged: boolean
-): Promise<{ slidesDir: string; files: string[]; mergedFile: string | null }> {
-  const slidesDir = join(projectDir, "tmp", "slides");
-  const files = await writeSlideFiles(presentation, slidesDir);
-
-  let mergedFile: string | null = null;
-  if (merged && presentation.slides.length > 0) {
-    const html = await compileSlidesFromDir(presentation, slidesDir);
-    mergedFile = join(projectDir, "tmp", "preview.html");
-    await writeFile(mergedFile, html, "utf8");
-  }
-
-  return { slidesDir, files, mergedFile };
-}
-
-async function isServerUp(port: number): Promise<boolean> {
-  try {
-    const res = await fetch(`http://127.0.0.1:${port}/api/hello`, {
-      signal: AbortSignal.timeout(500),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
-
-async function waitForServer(port: number, timeoutMs: number): Promise<boolean> {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) {
-    if (await isServerUp(port)) return true;
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  return false;
-}
-
-/** Start the local editor server detached; returns its pid. */
-function startEditorServer(port: number, projectDir: string): number {
-  const root = join(import.meta.dir, "..", "..", "..", "..");
-  const proc = Bun.spawn(
-    ["bun", "--hot", join(root, "apps", "local-frontend", "index.ts")],
-    {
-      cwd: root,
-      env: {
-        ...process.env,
-        DECKWORKS_PORT: String(port),
-        PORT: String(port),
-        DECKWORK_PROJECT_DIR: projectDir,
-      },
-      stdin: "ignore",
-      stdout: "ignore",
-      stderr: "ignore",
-    }
-  );
-  proc.unref();
-  return proc.pid;
-}
-
-export function registerFeedbackTools(server: McpServer, app: DeckworksApp) {
-  server.registerTool(
-    "deck_comment",
-    {
-      description:
-        "Attach a comment to a slide (optionally targeting a specific element). The comment is stored in presentation state but not yet persisted until deck_save.",
-      inputSchema: {
-        slideId: z.string(),
-        elementId: z.string().optional(),
-        message: z.string(),
-        imageUrl: z.string().optional(),
-        link: z.string().optional(),
-      },
-    },
-    async (args) =>
-      guard(() => {
-        const comment: Comment = {
-          id: `comment-${Date.now()}-${commentSeq++}`,
-          slideId: args.slideId,
-          elementId: args.elementId,
-          message: args.message,
-          status: "open",
-          imageUrl: args.imageUrl,
-          link: args.link,
-        };
-        app.addComment(comment);
-        return comment;
-      })
-  );
-
-  server.registerTool(
-    "deck_comments",
-    {
-      description: "List comments, optionally filtered to a single slide.",
-      inputSchema: { slideId: z.string().optional() },
-    },
-    async (args) =>
-      guard(() =>
-        app.state.comments.filter((c) => !args.slideId || c.slideId === args.slideId)
-      )
-  );
-
-  server.registerTool(
-    "deck_resolve_comment",
-    {
-      description: "Mark a comment as resolved.",
-      inputSchema: { commentId: z.string() },
-    },
-    async (args) =>
-      guard(() => {
-        app.resolveComment(args.commentId);
-        return { resolved: args.commentId };
-      })
-  );
-
-  server.registerTool(
-    "deck_preview",
-    {
-      description:
-        "Render the active presentation to disk: one self-contained HTML file per slide in <project>/tmp/slides/, plus a merged <project>/tmp/preview.html. Returns the file paths. This renders files only — it does not start the interactive web editor (use `bun run dev` for that).",
-      inputSchema: {
-        merged: z
-          .boolean()
-          .optional()
-          .describe("Also write the merged tmp/preview.html document (default true)."),
-      },
-    },
-    async (args) =>
-      guard(async () => {
-        if (!app.projectDir) {
-          throw new Error("No project open. Run deck_init or deck_open first.");
-        }
-        const presentation = app.state;
-        const { slidesDir, files, mergedFile } = await renderPreviewFiles(
-          presentation,
-          app.projectDir,
-          args.merged !== false
-        );
-
-        return {
-          previewDir: slidesDir,
-          mergedFile,
-          slideCount: presentation.slides.length,
-          template: presentation.template,
-          dimensions: presentation.dimensions,
-          slides: presentation.slides.map((slide, index) => ({
-            index,
-            slideId: slide.id,
-            elements: slide.elements.length,
-            file: files[index] ?? null,
-          })),
-          next: "Run deck_review to check geometry and density before exporting.",
-        };
-      })
-  );
-
-  server.registerTool(
-    "deck_open_preview",
-    {
-      description:
-        "Render the deck preview and automatically open it in the default browser. mode=\"file\" (default) renders <project>/tmp/preview.html and opens that file; mode=\"editor\" starts the local editor server (unless one is already running on the port) and opens http://localhost:<port>.",
-      inputSchema: {
-        mode: z
-          .enum(["file", "editor"])
-          .optional()
-          .describe(
-            'file (default) opens the rendered tmp/preview.html; editor opens the live local editor.'
-          ),
-        port: z
-          .number()
-          .int()
-          .optional()
-          .describe("Port for editor mode (default DECKWORKS_PORT/PORT/3000)."),
-      },
-    },
-    async (args) =>
-      guard(async () => {
-        if (!app.projectDir) {
-          throw new Error("No project open. Run deck_init or deck_open first.");
-        }
-
-        const mode = args.mode ?? "file";
-
-        if (mode === "editor") {
-          const port =
-            args.port ??
-            Number(process.env.DECKWORKS_PORT ?? process.env.PORT ?? 3000);
-          const running = await isServerUp(port);
-          let pid: number | null = null;
-          if (!running) {
-            pid = startEditorServer(port, app.projectDir);
-            await waitForServer(port, 15000);
-          }
-          const url = `http://localhost:${port}`;
-          const opened = openInBrowser(url);
-          return {
-            mode,
-            url,
-            opened,
-            startedServer: !running,
-            pid,
-            hint: opened
-              ? "Preview opened in your default browser."
-              : "Server is running, but no browser opener was found. Open the URL manually.",
-          };
-        }
-
-        const presentation = app.state;
-        const { slidesDir, files, mergedFile } = await renderPreviewFiles(
-          presentation,
-          app.projectDir,
-          true
-        );
-        if (!mergedFile) {
-          throw new Error("Preview has no slides to open.");
-        }
-        const opened = openInBrowser(mergedFile);
-        return {
-          mode,
-          previewFile: mergedFile,
-          slidesDir,
-          opened,
-          slideCount: presentation.slides.length,
-          slides: files,
-          hint: opened
-            ? "Preview opened in your default browser."
-            : "Preview rendered, but no browser opener was found. Open the file manually.",
-        };
-      })
-  );
-
+export function registerReviewTools(server: McpServer, app: DeckworksApp) {
   server.registerTool(
     "deck_review",
     {
       description:
-        "Inspect the active presentation and report layout, overflow, overlap, off-canvas, unsupported-element and look-density problems as structured findings (slideId > elementId > problem > fix). Text-overflow results are estimates. Run deck_preview first for rendered files.",
+        "Check the active project's deck.json and report layout, overflow, overlap, off-canvas, unsupported-element and look-density problems as structured findings (slideId > elementId > problem > fix). Reads deck.json fresh from disk, so it reflects edits made with your own file tools. Text-overflow results are estimates.",
+      inputSchema: {
+        path: z
+          .string()
+          .optional()
+          .describe("Project directory to check. Defaults to the active project from deck_open."),
+      },
     },
-    async () =>
+    async (args) =>
       guard(async () => {
-        const presentation = app.state;
+        const projectDir = resolveProjectDir(app, args.path);
+
+        let presentation: Presentation;
+        try {
+          presentation = await readDeck(projectDir);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          const problem = `Could not read deck.json: ${message}`;
+          const fix =
+            "Write a valid deck.json (see deck_get_schema), then run deck_review again.";
+          return {
+            projectDir,
+            summary: { errors: 1, warnings: 0, info: 0 },
+            ok: false,
+            findings: [{ severity: "error", slideId: "-", problem, fix }],
+            report: [`- > ${problem} > ${fix}`],
+            notes: ["deck.json could not be read; no layout checks were run."],
+          };
+        }
+
         const spec = await readLookSpec(presentation.template);
         const densityCeiling = spec ? parseDensityCeiling(spec) : null;
 
@@ -517,6 +304,7 @@ export function registerFeedbackTools(server: McpServer, app: DeckworksApp) {
         }
 
         return {
+          projectDir,
           template: presentation.template,
           dimensions: presentation.dimensions,
           slideCount: presentation.slides.length,

@@ -6,7 +6,7 @@
 //
 // Materials are the inputs a deck is built from: data files, documents,
 // images, and web links. These live in the frontend store for now and will be
-// surfaced to the MCP `deck_new` tool once parsing/generation is wired up.
+// surfaced to the agent once parsing/generation is wired up.
 
 export type MaterialKind = "csv" | "pdf" | "html" | "md" | "image" | "link";
 

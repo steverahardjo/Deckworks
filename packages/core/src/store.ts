@@ -124,7 +124,7 @@ export class DeckworksApp {
   }
 
   async save(): Promise<void> {
-    if (!this.dir) throw new Error("No project open. Run deck_init or deck_open first.");
+    if (!this.dir) throw new Error("No project open. Run deck_open first.");
     this.presentation.metadata.updatedAt = new Date().toISOString();
     await writeFile(
       join(this.dir, DECK_FILE),

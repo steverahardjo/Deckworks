@@ -137,49 +137,36 @@ The MCP server is the primary interface for coding agents.
 
 See [`packages/mcp/README.md`](packages/mcp/README.md) for per-client setup (Claude Code, OpenCode, Codex, and any other MCP client) and the agent workflow.
 
-The MCP is deliberately workflow-oriented rather than exposing only low-level CRUD operations.
+The MCP is deliberately small: the agent authors `deck.json` with its own file
+tools, and the server supplies runtime knowledge, a checker, the live preview,
+and export.
 
 **Lifecycle**
 
 ```text
-deck_init
-deck_new
 deck_open
 deck_status
-deck_set_workflow
 ```
 
 **Agent knowledge**
 
 ```text
-deck_load_skill
-deck_get_instructions
 deck_get_schema
+deck_get_instructions
+deck_list_specs
+deck_list_skills
+deck_load_skill
+deck_list_workflows
+deck_load_workflow
+deck_list_looks
+deck_load_look
 ```
 
-**Editing**
+**Check, preview and output**
 
 ```text
-deck_change
-deck_add_slide
-deck_delete_slide
-deck_reorder_slide
-```
-
-**Feedback**
-
-```text
-deck_preview
 deck_review
-deck_comment
-deck_comments
-deck_resolve_comment
-```
-
-**Persistence and output**
-
-```text
-deck_save
+run_preview
 deck_export
 ```
 
@@ -594,13 +581,11 @@ sent via POST /api/compile
       ↓
 Agent reads slide.screenshot (multimodal) + comments
       ↓
-deck_change
-      ↓
-deck_save
-      ↓
-deck_preview
+Agent edits deck.json with its own file tools
       ↓
 deck_review
+      ↓
+run_preview
 ```
 
 One screenshot per slide per compile, not one per comment — so a slide with three comments produces a single image showing all three pins.
@@ -752,7 +737,7 @@ Acceptance test:
 
 > A human can comment on a rendered slide and an agent can make a targeted change and preview the result again.
 
-Status: the human side is built — anchored comments, per-slide annotated screenshots on compile, hydration, and comment resolution. The agent side (reading screenshots, `deck_change`, re-preview) is wired via MCP tools but not yet exercised end-to-end with a generation model.
+Status: the human side is built — anchored comments, per-slide annotated screenshots on compile, hydration, and comment resolution. The agent side (reading screenshots, editing `deck.json`, re-preview via `deck_review`/`run_preview`) is wired via MCP tools but not yet exercised end-to-end with a generation model.
 
 ## Non-goals for the MVP
 

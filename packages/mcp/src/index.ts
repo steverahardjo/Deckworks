@@ -4,8 +4,8 @@ import { DeckworksApp } from "@deckworks/core/store";
 
 import { registerLifecycleTools } from "./tools/lifecycle.js";
 import { registerKnowledgeTools } from "./tools/knowledge.js";
-import { registerEditingTools } from "./tools/editing.js";
-import { registerFeedbackTools } from "./tools/feedback.js";
+import { registerReviewTools } from "./tools/review.js";
+import { registerPreviewTools } from "./tools/preview.js";
 import { registerOutputTools } from "./tools/output.js";
 
 const app = new DeckworksApp();
@@ -14,8 +14,8 @@ const server = new McpServer({ name: "deckworks", version: "0.1.0" });
 
 registerLifecycleTools(server, app);
 registerKnowledgeTools(server, app);
-registerEditingTools(server, app);
-registerFeedbackTools(server, app);
+registerReviewTools(server, app);
+registerPreviewTools(server, app);
 registerOutputTools(server, app);
 
 const transport = new StdioServerTransport();

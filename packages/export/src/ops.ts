@@ -3,11 +3,21 @@ import { join } from "node:path";
 import type { Presentation } from "@deckworks/core";
 
 import { compileSlidesFromDir, writeSlideFiles } from "./exportHtml.js";
-import { renderPresentationPdf } from "./exportPdf.js";
 import { renderPresentationPdfViaChrome } from "./exportPdfChrome.js";
 import { renderPresentationPptx } from "./exportPptx.js";
 
 export { writeSlideFiles, compileSlidesFromDir } from "./exportHtml.js";
+
+/**
+ * Load the React-PDF fallback on demand. Bundlers can't resolve pdfkit's
+ * `#standard-fonts/*` subpath imports, so importing this module eagerly breaks
+ * self-contained builds (e.g. the compiled MCP server) even when PDF is never
+ * exported. The Chrome path below handles PDF whenever Chrome is available.
+ */
+async function renderPdfFallback(presentation: Presentation): Promise<Uint8Array> {
+  const { renderPresentationPdf } = await import("./exportPdf.js");
+  return renderPresentationPdf(presentation);
+}
 
 export type ExportFormat = "html" | "pdf" | "pptx";
 
@@ -68,7 +78,7 @@ export async function exportDeck(
   // and the SVG exhibits; fall back to React-PDF when Chrome is unavailable.
   const pdf =
     (await renderPresentationPdfViaChrome(presentation, slidesDir)) ??
-    (await renderPresentationPdf(presentation));
+    (await renderPdfFallback(presentation));
   await writeFile(filePath, pdf);
   return {
     format,
