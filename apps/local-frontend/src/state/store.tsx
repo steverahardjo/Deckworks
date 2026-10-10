@@ -8,7 +8,6 @@ import {
 } from "react";
 
 import type { Comment, Presentation, Preset, Slide } from "@deckworks/core";
-import { presets as presetList } from "@deckworks/core";
 import { mockPresentation } from "./mockPresentation";
 import type { Material } from "./types";
 
@@ -29,6 +28,7 @@ export type Action =
   | { type: "apply-preset"; presetId: string }
   | { type: "add-comment"; comment: Comment }
   | { type: "hydrate-comments"; comments: Comment[] }
+  | { type: "hydrate-presets"; presets: Preset[] }
   | { type: "resolve-comment"; commentId: string }
   | { type: "add-slide"; slide: Slide }
   | { type: "hydrate"; presentation: Presentation }
@@ -56,7 +56,7 @@ function reducer(state: State, action: Action): State {
     case "select-slide":
       return { ...state, activeSlideId: action.slideId };
     case "apply-preset": {
-      const preset = presetList.find((p) => p.id === action.presetId);
+      const preset = state.presets.find((p) => p.id === action.presetId);
       if (!preset) return state;
       return {
         ...state,
@@ -87,6 +87,8 @@ function reducer(state: State, action: Action): State {
         },
       };
     }
+    case "hydrate-presets":
+      return { ...state, presets: action.presets };
     case "resolve-comment":
       return {
         ...state,
@@ -155,7 +157,7 @@ function reducer(state: State, action: Action): State {
         },
       };
     case "build": {
-      const preset = presetList.find((p) => p.id === state.selectedLook);
+      const preset = state.presets.find((p) => p.id === state.selectedLook);
       const note = state.materials.find(
         (material) => material.kind === "md" && material.name.toLowerCase() === "note.md"
       );
@@ -173,7 +175,7 @@ function reducer(state: State, action: Action): State {
 const initialState: State = {
   presentation: mockPresentation,
   activeSlideId: mockPresentation.slides[0]?.id ?? "slide-01",
-  presets: presetList,
+  presets: [],
   materials: [],
   activeMarkdownId: null,
   selectedLook: "consulting",
@@ -196,6 +198,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       .then((data) => {
         if (cancelled || !data?.presentation?.slides?.length) return;
         dispatch({ type: "hydrate", presentation: data.presentation });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/presets")
+      .then((res) =>
+        res.ok ? (res.json() as Promise<{ presets: Preset[] }>) : null
+      )
+      .then((data) => {
+        if (cancelled || !data?.presets?.length) return;
+        dispatch({ type: "hydrate-presets", presets: data.presets });
       })
       .catch(() => {});
     return () => {

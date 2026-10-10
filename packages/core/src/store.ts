@@ -1,12 +1,12 @@
 import { access, mkdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 
-import { presets } from "./presets.js";
+import { findPreset, listPresets, SHARED_DIR } from "./specs.js";
 import type { Comment, Presentation, Slide } from "./types.js";
 
 const DECK_FILE = "deck.json";
 export const DEFAULT_WORKFLOW = "create";
-const SHARED_SANDBOX_DIR = resolve(import.meta.dir, "../../../backend/shared/sandbox");
+const SHARED_SANDBOX_DIR = join(SHARED_DIR, "sandbox");
 
 const SANDBOX_FALLBACK = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><title>Deckworks sandbox</title><link rel="stylesheet" href="./slide.css"></head>
@@ -26,7 +26,8 @@ async function ensureProjectWorkspace(
   templateId: string,
   workflow = DEFAULT_WORKFLOW
 ): Promise<void> {
-  const theme = presets.find((preset) => preset.id === templateId)?.theme ?? presets[0]!.theme;
+  const theme = findPreset(templateId)?.theme ?? listPresets()[0]?.theme;
+  if (!theme) throw new Error("No look specs found; cannot set up the project workspace.");
   await Promise.all([
     mkdir(join(dir, "assets"), { recursive: true }),
     mkdir(join(dir, "tmp"), { recursive: true }),
@@ -61,9 +62,8 @@ export function createPresentation(
   workflow = DEFAULT_WORKFLOW
 ): Presentation {
   const now = new Date().toISOString();
-  const theme =
-    presets.find((p) => p.id === templateId)?.theme ??
-    presets.find((p) => p.id === "consulting")!.theme;
+  const theme = findPreset(templateId)?.theme ?? listPresets()[0]?.theme;
+  if (!theme) throw new Error("No look specs found; cannot create a presentation.");
 
   return {
     metadata: { title, author: "deckworks", createdAt: now, updatedAt: now },
@@ -164,6 +164,23 @@ export class DeckworksApp {
         "utf8"
       );
     }
+  }
+
+  /**
+   * Store the agent-authored slide stylesheet on the deck and materialize it to
+   * `<project>/tmp/slide.css`. Preview, export and the editor render every slide
+   * with this stylesheet instead of the bundled sandbox stylesheet.
+   */
+  async setStylesheet(css: string): Promise<{ file: string | null; bytes: number }> {
+    this.presentation.stylesheet = css;
+    let file: string | null = null;
+    if (this.dir) {
+      await mkdir(join(this.dir, "tmp"), { recursive: true });
+      file = join(this.dir, "tmp", "slide.css");
+      await writeFile(file, css, "utf8");
+      await this.save();
+    }
+    return { file, bytes: Buffer.byteLength(css, "utf8") };
   }
 
   addSlide(slide: Slide): void {

@@ -83,6 +83,12 @@ export interface Presentation {
   template: string;
   /** The operating mode selected for the current deck run. */
   workflow?: string;
+  /**
+   * Agent-authored stylesheet that lays out every slide, following the selected
+   * look spec. Materialized to `<project>/tmp/slide.css` and used instead of the
+   * bundled sandbox stylesheet when present.
+   */
+  stylesheet?: string;
   slides: Slide[];
   comments: Comment[];
 }

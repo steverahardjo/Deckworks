@@ -11,6 +11,10 @@
     "./store": {
       "types": "./src/store.ts",
       "default": "./src/store.ts"
+    },
+    "./specs": {
+      "types": "./src/specs.ts",
+      "default": "./src/specs.ts"
     }
   }
 }

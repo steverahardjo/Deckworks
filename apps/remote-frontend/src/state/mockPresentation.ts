@@ -1,7 +1,14 @@
-import { presets } from "@deckworks/core";
-import type { Presentation } from "@deckworks/core";
+import type { Presentation, Theme } from "@deckworks/core";
 
-const consultingTheme = presets.find((p) => p.id === "consulting")!.theme;
+const consultingTheme: Theme = {
+  id: "consulting",
+  name: "Consulting",
+  background: "#ffffff",
+  foreground: "#0f172a",
+  accent: "#2563eb",
+  muted: "#64748b",
+  font: '"Source Sans 3", "Anthropic Sans Text", "Helvetica Neue", Arial, sans-serif',
+};
 
 export const mockPresentation: Presentation = {
   metadata: {

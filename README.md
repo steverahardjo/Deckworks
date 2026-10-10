@@ -316,20 +316,19 @@ Example:
 └──────────────────────────────────────────┘
 ```
 
-Templates should be stored as reusable definitions:
+Looks are stored as reusable definitions and discovered at runtime:
 
 ```text
-templates/
-├── consulting/
-├── minimal/
-├── corporate/
-├── editorial/
-├── academic/
-├── startup/
-└── dark/
+spec/look/
+├── consulting.md
+├── minimal.md
+├── editorial.md
+├── academic.md
+├── startup.md
+└── dark.md
 ```
 
-A template should define theme and layout conventions, not duplicate an entire presentation.
+A look defines theme and layout conventions, not an entire presentation.
 
 ### CLI workflow
 

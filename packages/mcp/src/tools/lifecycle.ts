@@ -38,7 +38,7 @@ export function registerLifecycleTools(server: McpServer, app: DeckworksApp) {
         template: z
           .string()
           .optional()
-          .describe("Template id: minimal | consulting | corporate | dark."),
+          .describe("Template id: minimal | consulting | dark | editorial | academic | startup."),
         title: z.string().optional().describe("Presentation title."),
         workflow: z
           .string()

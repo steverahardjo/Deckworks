@@ -3,7 +3,7 @@
 // Auth: JWT access + refresh tokens stored in localStorage. Every authed call
 // attaches `Authorization: Bearer <access>` and transparently refreshes once on
 // a 401. Deck operations are scoped to a single project owned by the user.
-import type { Presentation, Slide } from "@deckworks/core";
+import type { Preset, Presentation, Slide } from "@deckworks/core";
 
 export const API_BASE: string =
   (import.meta as { env?: Record<string, string | undefined> }).env?.BUN_PUBLIC_API_URL ??
@@ -162,6 +162,14 @@ export async function logout(): Promise<void> {
   }
   clearTokens();
   clearProjectId();
+}
+
+// --- shared assets ---
+
+/** Looks discovered by the backend from spec/look/*.md. */
+export async function getPresets(): Promise<Preset[]> {
+  const data = await request<{ presets: Preset[] }>("/presets");
+  return data.presets;
 }
 
 // --- projects / deck ---

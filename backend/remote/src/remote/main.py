@@ -1,5 +1,5 @@
-import json
 import logging
+import re
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException
@@ -23,11 +23,70 @@ from .store import MemoryProjectStore, Project
 logger = logging.getLogger("remote")
 
 SHARED_DIR = Path(__file__).resolve().parents[3] / "shared"
-PRESETS_PATH = SHARED_DIR / "templates" / "presets.json"
 SKILLS_DIR = SHARED_DIR / "skills"
 SPEC_DIR = SHARED_DIR / "spec"
 WORKFLOW_DIR = SPEC_DIR / "workflow"
 LOOK_DIR = SPEC_DIR / "look"
+
+_LOOK_FIELD_RE = re.compile(r"^\|\s*\*\*(.+?)\*\*\s*\|\s*(.+?)\s*\|\s*$")
+_LOOK_NAME_RE = re.compile(r"^#\s*Look spec:\s*(.+?)\s*$", re.MULTILINE)
+_LOOK_ROW_RE = re.compile(r"^\|\s*`([^`]+)`\s*\|", re.MULTILINE)
+
+
+def _look_fields(text: str) -> dict[str, str]:
+    fields: dict[str, str] = {}
+    for line in text.splitlines():
+        match = _LOOK_FIELD_RE.match(line)
+        if match:
+            fields[match.group(1).strip().lower()] = match.group(2).replace("`", "").strip()
+    return fields
+
+
+def _parse_look(path: Path) -> dict | None:
+    """Parse a look spec header into a preset, or None when incomplete."""
+    text = path.read_text()
+    fields = _look_fields(text)
+    name = _LOOK_NAME_RE.search(text)
+    required = ("id", "background", "foreground", "accent", "muted", "font")
+    if name is None or any(not fields.get(key) for key in required):
+        return None
+    look_id = fields["id"]
+    display = name.group(1).strip()
+    return {
+        "id": look_id,
+        "name": display,
+        "theme": {
+            "id": look_id,
+            "name": display,
+            "background": fields["background"],
+            "foreground": fields["foreground"],
+            "accent": fields["accent"],
+            "muted": fields["muted"],
+            "font": fields["font"],
+        },
+    }
+
+
+def _look_order() -> dict[str, int]:
+    """Catalog order from the look README table."""
+    readme = LOOK_DIR / "README.md"
+    if not readme.exists():
+        return {}
+    return {match.group(1): index for index, match in enumerate(_LOOK_ROW_RE.finditer(readme.read_text()))}
+
+
+def _load_presets() -> list[dict]:
+    """Read every look spec in spec/look into a preset list."""
+    if not LOOK_DIR.exists():
+        return []
+    presets = [
+        parsed
+        for path in sorted(LOOK_DIR.glob("*.md"))
+        if path.name.lower() != "readme.md" and (parsed := _parse_look(path)) is not None
+    ]
+    order = _look_order()
+    presets.sort(key=lambda preset: (order.get(preset["id"], 10**9), preset["id"]))
+    return presets
 
 
 def _markdown_files(directory: Path) -> list[str]:
@@ -130,9 +189,7 @@ def create_app(settings: Settings | None = None, *, auth_service: AuthService | 
 
     @app.get("/presets")
     async def presets():
-        if not PRESETS_PATH.exists():
-            raise HTTPException(status_code=404, detail="presets not found")
-        return json.loads(PRESETS_PATH.read_text())
+        return {"presets": _load_presets()}
 
     @app.get("/skills/{name}")
     async def skill(name: str):

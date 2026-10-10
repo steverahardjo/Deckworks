@@ -23,10 +23,16 @@
   text-rendering: optimizeLegibility;
 }
 
-/* Every element is absolutely positioned by the renderer; this class carries
-   only the box model so no element needs its own styling. */
+/* The renderer publishes each element's box as --slide-x/y/w/h custom
+   properties (not hard inline coordinates), so the default layout positions
+   from those while an agent-authored stylesheet can ignore or override them and
+   lay the slide out with its own grid/flex rules. */
 .slide-el {
   position: absolute;
+  left: var(--slide-x, 0);
+  top: var(--slide-y, 0);
+  width: var(--slide-w, auto);
+  height: var(--slide-h, auto);
   margin: 0;
 }
 

@@ -26,6 +26,7 @@
       "@/*": ["./apps/local-frontend/src/*"],
       "@deckworks/core": ["./packages/core/src/index.ts"],
       "@deckworks/core/store": ["./packages/core/src/store.ts"],
+      "@deckworks/core/specs": ["./packages/core/src/specs.ts"],
       "@deckworks/export": ["./packages/export/src/index.ts"],
       "@deckworks/export/html": ["./packages/export/src/exportHtml.ts"],
       "@deckworks/export/pdf": ["./packages/export/src/exportPdf.tsx"],

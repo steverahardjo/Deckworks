@@ -52,6 +52,11 @@ const PRESENTATION_SCHEMA = {
     },
     template: { type: "string" },
     workflow: { type: "string" },
+    stylesheet: {
+      type: "string",
+      description:
+        "Agent-authored slide stylesheet. Overrides the bundled sandbox stylesheet for preview, export and the editor.",
+    },
     slides: {
       type: "array",
       items: {

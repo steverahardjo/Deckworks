@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DeckworksApp, ElementPatch } from "@deckworks/core/store";
-import { presets } from "@deckworks/core";
+import { listPresets } from "@deckworks/core/specs";
 import type { Slide } from "@deckworks/core";
 
 import { guard } from "./util.js";
@@ -146,17 +146,18 @@ export function registerEditingTools(server: McpServer, app: DeckworksApp) {
     "change_styling",
     {
       description:
-        "Change deck-wide styling. Pass a runtime-discovered look id to apply its palette; omit it to read current styling. One shared stylesheet (sandbox/slide.css) rules every slide — styling is never per slide.",
+        "Change the deck-wide palette. Pass a runtime-discovered look id to apply its theme colours and font; omit it to read current styling. Styling is deck-wide, never per slide.",
       inputSchema: {
         style: z
           .string()
           .optional()
-          .describe("Look/preset id, e.g. dark, consulting, mckinsey. Omit to read current."),
+          .describe("Look/preset id, e.g. dark, consulting, startup. Omit to read current."),
       },
     },
     async (args) =>
       guard(() => {
         if (args.style) {
+          const presets = listPresets();
           const preset = presets.find(
             (p) => p.id === args.style || p.theme.id === args.style
           );
@@ -171,6 +172,29 @@ export function registerEditingTools(server: McpServer, app: DeckworksApp) {
           app.state.template = preset.id;
         }
         return { template: app.state.template, theme: app.state.theme };
+      })
+  );
+
+  server.registerTool(
+    "deck_set_stylesheet",
+    {
+      description:
+        "Write the deck-wide stylesheet that lays out and styles every slide. Author it from the selected look spec — palette, type scale, grid, and component treatments — instead of relying on the bundled default. The stylesheet is stored on the deck and written to <project>/tmp/slide.css; deck_preview, deck_export and the editor render the generated slide HTML with it.",
+      inputSchema: {
+        css: z
+          .string()
+          .describe("Full CSS applied to every slide surface. Use the theme vars --slide-bg/fg/muted/accent/font."),
+      },
+    },
+    async (args) =>
+      guard(async () => {
+        const result = await app.setStylesheet(args.css);
+        return {
+          file: result.file,
+          bytes: result.bytes,
+          template: app.state.template,
+          next: "Run deck_preview to render the slides with this stylesheet.",
+        };
       })
   );
 

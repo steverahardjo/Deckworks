@@ -57,8 +57,8 @@ Open a tmp/ in the folder you are in or ask for user file dir they wish to use.
 | `deck-profile.md` | Run context: workflow, look, audience, objective, dimensions, and supported components. |
 | `scratchpad.md` | Working record: research, uncertainty, calculations, contradictions, and construction decisions. |
 | `references.md` | Clean final registry of sources, citations, datasets, figures, and other assets used in the deck. |
-| `tmp/` | Reproducible temporary scripts, extracted text, generated charts, and intermediate assets. |
-| `sandbox/` | Isolated preview surface and the single shared slide stylesheet. |
+| `tmp/` | Reproducible temporary scripts, extracted text, generated charts, intermediate assets, and the rendered slide HTML + agent-authored `tmp/slide.css`. |
+| `sandbox/` | Isolated preview surface and the bundled fallback stylesheet. |
 
 Do not treat scratchpad notes, temporary files, or previews as deck state.
 Do not promote every investigated source into `references.md`; include only
@@ -85,15 +85,27 @@ Detailed evidence handling belongs to the selected workflow spec.
 
 ## 4. Apply one deck-wide look
 
-All slides share `sandbox/slide.css`. Apply the selected look with
-`change_styling { style }`.
+Apply the selected look's palette with `change_styling { style }`, then author
+the slide stylesheet with `deck_set_stylesheet { css }`. The stylesheet is
+written to `tmp/slide.css` and stored on the deck; `deck_preview`, `deck_export`
+and the editor render every slide's generated HTML with it instead of the
+bundled `sandbox/slide.css`.
+
+Write the stylesheet from the selected look spec: its palette, type scale, grid,
+density ceiling, and component treatments. The renderer publishes each element's
+model box as `--slide-x/y/w/h` custom properties and its content as
+`.slide-<type>` classes, so layout is yours to define. Cover the element classes
+you use and keep the five theme variables (`--slide-bg`, `--slide-fg`,
+`--slide-muted`, `--slide-accent`, `--slide-font`) as the colour/interaction
+source.
 
 Styling invariants:
 
-* Styling is deck-wide, not slide-specific.
-* Do not introduce per-slide fonts, palettes, or CSS overrides.
-* Slides may differ through content, component choice, layout, and geometry.
-* Fix content, geometry, or component selection before changing the deck-wide look.
+* Styling is deck-wide, not slide-specific; all slides share one stylesheet.
+* Follow the selected look spec's layout and density rules; do not invent a
+  second visual system.
+* Prefer one stylesheet with reusable layout classes over per-slide overrides.
+* Fix content or component selection before rewriting the stylesheet.
 * Use only components and properties supported by the actual schema and renderer.
 
 If the user has not selected a look and the choice materially affects the
@@ -140,12 +152,13 @@ that the export environment can render the chosen font and SVG features.
 Use the following sequence unless the selected workflow narrows it:
 
 1. `list_slide` — inspect current pages and stable ids.
-2. `change_styling` — apply the selected deck-wide look.
-3. `add_slide` — add approved slides.
-4. `change_slide` — replace or revise a slide by page or id.
-5. `deck_save` — persist deck state.
-6. `deck_preview` — generate rendered slide files.
-7. `deck_review` — inspect geometry, density, support, and look compliance.
+2. `change_styling` — apply the selected look's palette.
+3. `deck_set_stylesheet` — author the deck stylesheet from the look spec.
+4. `add_slide` — add approved slides.
+5. `change_slide` — replace or revise a slide by page or id.
+6. `deck_save` — persist deck state.
+7. `deck_preview` — generate rendered slide files.
+8. `deck_review` — inspect geometry, density, support, and look compliance.
 
 Follow the schemas exposed by the tools rather than guessing arguments.
 

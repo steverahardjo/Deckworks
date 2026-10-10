@@ -3,6 +3,7 @@ import { join, resolve, sep } from "node:path";
 import { serve } from "bun";
 import index from "./index.html";
 import { DeckworksApp } from "@deckworks/core/store";
+import { listPresets } from "@deckworks/core/specs";
 import type { Comment, Presentation, Slide } from "@deckworks/core";
 import { exportDeck, writeSlideFiles } from "@deckworks/export/ops";
 
@@ -109,6 +110,12 @@ const server = serve({
           message: "Hello, world!",
           method: "GET",
         });
+      },
+    },
+
+    "/api/presets": {
+      async GET() {
+        return Response.json({ presets: listPresets() });
       },
     },
 

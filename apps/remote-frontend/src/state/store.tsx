@@ -9,9 +9,8 @@ import {
 } from "react";
 
 import type { Comment, Presentation, Preset, Slide } from "@deckworks/core";
-import { presets as presetList } from "@deckworks/core";
 import { mockPresentation } from "./mockPresentation";
-import { putDeck } from "@/lib/remote";
+import { getPresets, putDeck } from "@/lib/remote";
 import type { Material } from "./types";
 
 export type State = {
@@ -31,6 +30,7 @@ export type Action =
   | { type: "apply-preset"; presetId: string }
   | { type: "add-comment"; comment: Comment }
   | { type: "hydrate-comments"; comments: Comment[] }
+  | { type: "hydrate-presets"; presets: Preset[] }
   | { type: "resolve-comment"; commentId: string }
   | { type: "add-slide"; slide: Slide }
   | { type: "compile" }
@@ -57,7 +57,7 @@ function reducer(state: State, action: Action): State {
     case "select-slide":
       return { ...state, activeSlideId: action.slideId };
     case "apply-preset": {
-      const preset = presetList.find((p) => p.id === action.presetId);
+      const preset = state.presets.find((p) => p.id === action.presetId);
       if (!preset) return state;
       return {
         ...state,
@@ -88,6 +88,8 @@ function reducer(state: State, action: Action): State {
         },
       };
     }
+    case "hydrate-presets":
+      return { ...state, presets: action.presets };
     case "resolve-comment":
       return {
         ...state,
@@ -149,7 +151,7 @@ function reducer(state: State, action: Action): State {
         },
       };
     case "build": {
-      const preset = presetList.find((p) => p.id === state.selectedLook);
+      const preset = state.presets.find((p) => p.id === state.selectedLook);
       const note = state.materials.find(
         (material) => material.kind === "md" && material.name.toLowerCase() === "note.md"
       );
@@ -167,7 +169,7 @@ function reducer(state: State, action: Action): State {
 const initialState: State = {
   presentation: mockPresentation,
   activeSlideId: mockPresentation.slides[0]?.id ?? "slide-01",
-  presets: presetList,
+  presets: [],
   materials: [],
   activeMarkdownId: null,
   selectedLook: "consulting",
@@ -181,11 +183,10 @@ const DispatchContext = createContext<Dispatch<Action> | null>(null);
 function seed(initialPresentation?: Presentation): State {
   const base: State = { ...initialState };
   if (!initialPresentation) return base;
-  const look = presetList.find((p) => p.id === initialPresentation.template);
   return {
     ...base,
     presentation: initialPresentation,
-    selectedLook: look?.id ?? base.selectedLook,
+    selectedLook: initialPresentation.template || base.selectedLook,
   };
 }
 
@@ -199,6 +200,19 @@ export function AppProvider({
   projectId?: string;
 }) {
   const [state, dispatch] = useReducer(reducer, undefined, () => seed(initialPresentation));
+
+  // Looks are discovered from spec/look by the backend; hydrate them once.
+  useEffect(() => {
+    let cancelled = false;
+    getPresets()
+      .then((presets) => {
+        if (!cancelled && presets.length) dispatch({ type: "hydrate-presets", presets });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Autosave the deck to the remote project whenever the presentation changes.
   // The first render is the hydrated deck — don't immediately re-PUT it.

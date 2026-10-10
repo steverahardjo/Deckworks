@@ -6,7 +6,7 @@ Remote execution path: **FastAPI service (Python) + Vercel Sandbox** for isolate
 
 ## Shared assets
 
-Templates and skills live in `../shared/` (see `backend/shared/plan.md`). The remote backend should read theme presets from `backend/shared/templates/presets.json` and serve/expose agent skills from `backend/shared/skills/*.md`, rather than duplicating them.
+Looks and skills live in `../shared/`. The remote backend should parse theme presets from the look spec headers in `backend/shared/spec/look/*.md` and serve/expose agent skills from `backend/shared/skills/*.md`, rather than duplicating them.
 
 ## Goals
 

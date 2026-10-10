@@ -12,16 +12,64 @@ const SANDBOX_DIR =
   process.env.DECKWORKS_SANDBOX_DIR ??
   resolve(import.meta.dir, "../../../backend/shared/sandbox");
 
-let sharedCssCache: string | null = null;
-function sharedCss(): string {
-  if (sharedCssCache !== null) return sharedCssCache;
+let bundledCssCache: string | null = null;
+function bundledCss(): string {
+  if (bundledCssCache !== null) return bundledCssCache;
   try {
-    sharedCssCache = readFileSync(join(SANDBOX_DIR, "slide.css"), "utf8");
+    bundledCssCache = readFileSync(join(SANDBOX_DIR, "slide.css"), "utf8");
   } catch {
-    sharedCssCache = FALLBACK_CSS;
+    bundledCssCache = FALLBACK_CSS;
   }
-  return sharedCssCache;
+  return bundledCssCache;
 }
+
+/** Read an on-disk `slide.css` from a project tmp dir, if one was authored. */
+async function projectCss(dir?: string): Promise<string | null> {
+  if (!dir) return null;
+  for (const candidate of [join(dir, "slide.css"), join(dir, "..", "slide.css")]) {
+    try {
+      const css = await readFile(candidate, "utf8");
+      if (css.trim()) return css;
+    } catch {
+      /* try the next location */
+    }
+  }
+  return null;
+}
+
+/**
+ * The stylesheet that rules the deck. Prefer the agent-authored stylesheet on
+ * the deck, then a `slide.css` written into the project tmp dir, then the
+ * bundled sandbox stylesheet.
+ */
+export async function resolveStylesheet(
+  presentation: Presentation,
+  dir?: string
+): Promise<string> {
+  return (
+    presentation.stylesheet?.trim() ||
+    (await projectCss(dir)) ||
+    bundledCss()
+  );
+}
+
+/**
+ * Geometry contract. The renderer publishes each element's box as `--slide-x/y/
+ * w/h` custom properties rather than hard inline coordinates, so an
+ * agent-authored stylesheet can ignore or override them and lay the slide out
+ * with its own grid/flex rules. This base rule keeps the model geometry working
+ * when no custom stylesheet provides a layout.
+ */
+const BASE_CSS = `
+*, *::before, *::after { box-sizing: border-box; }
+.slide-el {
+  position: absolute;
+  left: var(--slide-x, 0);
+  top: var(--slide-y, 0);
+  width: var(--slide-w, auto);
+  height: var(--slide-h, auto);
+  margin: 0;
+}`;
 
 /**
  * The bundled Anthropic Sans files remain an export-safe fallback. Each look
@@ -116,7 +164,8 @@ export function slideDocumentHtml(
   theme: Theme,
   dimensions: { width: number; height: number },
   index: number,
-  total: number
+  total: number,
+  css: string = bundledCss()
 ): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -130,7 +179,8 @@ export function slideDocumentHtml(
   --font-stack: ${theme.font};
 }
 ${SLIDE_CSS}
-${sharedCss()}
+${BASE_CSS}
+${css}
 ${themeVarsCss(theme)}
 </style>
 </head>
@@ -143,7 +193,10 @@ ${slideSurfaceHtml(slide)}
 `;
 }
 
-export function renderPresentationHtml(presentation: Presentation): string {
+export function renderPresentationHtml(
+  presentation: Presentation,
+  css: string = presentation.stylesheet?.trim() || bundledCss()
+): string {
   const { theme, dimensions, slides, metadata } = presentation;
   const slidesHtml = slides
     .map(
@@ -165,7 +218,8 @@ export function renderPresentationHtml(presentation: Presentation): string {
   --font-stack: ${theme.font};
 }
 ${SLIDE_CSS}
-${sharedCss()}
+${BASE_CSS}
+${css}
 ${themeVarsCss(theme)}
 ${fontFaceCss()}
 @page {
@@ -191,6 +245,7 @@ export async function writeSlideFiles(
 ): Promise<string[]> {
   const { theme, dimensions, slides } = presentation;
   await mkdir(dir, { recursive: true });
+  const css = await resolveStylesheet(presentation, dir);
   const paths: string[] = [];
   for (let i = 0; i < slides.length; i++) {
     const slide = slides[i]!;
@@ -198,7 +253,7 @@ export async function writeSlideFiles(
     const filePath = join(dir, fileName);
     await writeFile(
       filePath,
-      slideDocumentHtml(slide, theme, dimensions, i, slides.length),
+      slideDocumentHtml(slide, theme, dimensions, i, slides.length, css),
       "utf8"
     );
     paths.push(filePath);
@@ -215,6 +270,7 @@ export async function compileSlidesFromDir(
   dir: string
 ): Promise<string> {
   const { theme, dimensions, metadata } = presentation;
+  const css = await resolveStylesheet(presentation, dir);
   const entries = (await readdir(dir))
     .filter((f) => /^slide-\d+\.html$/.test(f))
     .sort((a, b) => {
@@ -245,7 +301,8 @@ export async function compileSlidesFromDir(
   --font-stack: ${theme.font};
 }
 ${SLIDE_CSS}
-${sharedCss()}
+${BASE_CSS}
+${css}
 ${themeVarsCss(theme)}
 ${fontFaceCss()}
 @page {
@@ -270,7 +327,7 @@ function elementHtml(el: Element): string {
   const y = el.position.y;
   const w = el.size.width;
   const h = el.size.height;
-  const base = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
+  const base = `--slide-x:${x}px;--slide-y:${y}px;--slide-w:${w}px;--slide-h:${h}px;`;
   const text = String(el.properties.text ?? "");
   const cls = `slide-el slide-${el.type}`;
   const svg = String(el.properties.svg ?? "").trim();

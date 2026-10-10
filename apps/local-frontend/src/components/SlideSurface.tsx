@@ -121,12 +121,20 @@ export function SlideElement({
   element: Element;
   debug?: boolean;
 }) {
-  const style: CSSProperties = {
+  // Publish the model box as custom properties so the shared/agent stylesheet
+  // owns layout; keep raw coordinates for the debug overlay only.
+  const box: CSSProperties = {
     left: element.position.x,
     top: element.position.y,
     width: element.size.width,
     height: element.size.height,
   };
+  const style = {
+    "--slide-x": `${element.position.x}px`,
+    "--slide-y": `${element.position.y}px`,
+    "--slide-w": `${element.size.width}px`,
+    "--slide-h": `${element.size.height}px`,
+  } as CSSProperties;
   const cls = `slide-el slide-${element.type}`;
   const text = String(element.properties.text ?? "");
   const svg = String(element.properties.svg ?? "").trim();
@@ -184,7 +192,7 @@ export function SlideElement({
       {content}
       {debug && (
         <div
-          style={{ ...style }}
+          style={box}
           className="absolute z-10 border border-dashed border-red-400/80 pointer-events-none"
         >
           <span
