@@ -9,10 +9,10 @@ import {
 } from "@phosphor-icons/react";
 
 import { MarkdownView } from "./MarkdownView";
+import { WasmImage } from "./WasmImage";
 import {
   formatSize,
   listFiles,
-  rawUrl,
   readFile,
   type FileEntry,
 } from "@/lib/files";
@@ -240,10 +240,11 @@ export function FilesPanel() {
                 <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
                   {selected.kind === "image" ? (
                     <div className="flex h-full items-center justify-center rounded-sm bg-muted/40 p-3">
-                      <img
-                        src={`${rawUrl(selected.path)}?v=${selected.mtime}`}
-                        alt={selected.name}
-                        className="max-h-full max-w-full rounded-sm object-contain"
+                      <WasmImage
+                        path={selected.path}
+                        ext={selected.ext}
+                        name={selected.name}
+                        mtime={selected.mtime}
                       />
                     </div>
                   ) : contentLoading ? (

@@ -98,6 +98,72 @@ function resolveInProject(rel: string): string | null {
   return abs;
 }
 
+// WASM image decoders (@jsquash) loaded by the frontend's decode worker.
+const WASM_FILES: Record<string, string> = {
+  png: "@jsquash/png/codec/pkg/squoosh_png_bg.wasm",
+  jpeg: "@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm",
+  webp: "@jsquash/webp/codec/dec/webp_dec.wasm",
+};
+
+const wasmPaths = new Map<string, string>();
+
+function resolveWasm(codec: string): string | null {
+  const spec = WASM_FILES[codec];
+  if (!spec) return null;
+  const cached = wasmPaths.get(codec);
+  if (cached) return cached;
+  try {
+    const path = Bun.resolveSync(spec, import.meta.dir);
+    wasmPaths.set(codec, path);
+    return path;
+  } catch {
+    return null;
+  }
+}
+
+/** Stream a codec's decode WASM binary for manual initialisation in the worker. */
+function serveWasm(codec: string): Response {
+  const path = resolveWasm(codec);
+  if (!path) return Response.json({ error: "unknown codec" }, { status: 404 });
+  return new Response(Bun.file(path), {
+    headers: {
+      "Content-Type": "application/wasm",
+      "Cache-Control": "public, max-age=31536000, immutable",
+    },
+  });
+}
+
+// Bun's browser bundler cannot emit `new Worker(new URL(...))` targets yet, so
+// we compile the image-decode worker ourselves and serve it from a stable URL.
+// Cached in production; rebuilt per request in dev so edits are picked up.
+let workerCode: string | null = null;
+let workerBuild: Promise<string> | null = null;
+
+function getWorkerCode(): Promise<string> {
+  const isProd = process.env.NODE_ENV === "production";
+  if (isProd && workerCode) return Promise.resolve(workerCode);
+  if (workerBuild) return workerBuild;
+  workerBuild = (async () => {
+    const result = await Bun.build({
+      entrypoints: [join(import.meta.dir, "src/lib/imageWorker.ts")],
+      target: "browser",
+      format: "esm",
+      minify: isProd,
+    });
+    const output = result.outputs[0];
+    if (!result.success || !output) {
+      throw new Error("Failed to build the image decoder worker");
+    }
+    workerCode = await output.text();
+    return workerCode;
+  })();
+  if (!isProd) workerBuild.then(
+    () => (workerBuild = null),
+    () => (workerBuild = null)
+  );
+  return workerBuild;
+}
+
 const server = serve({
   port: PORT,
   routes: {
@@ -320,6 +386,46 @@ const server = serve({
           });
         } catch {
           return Response.json({ error: "file not found" }, { status: 404 });
+        }
+      },
+    },
+
+    // WASM decoder binaries for the frontend's canvas image renderer.
+    "/api/wasm/png": {
+      async GET() {
+        return serveWasm("png");
+      },
+    },
+    "/api/wasm/jpeg": {
+      async GET() {
+        return serveWasm("jpeg");
+      },
+    },
+    "/api/wasm/webp": {
+      async GET() {
+        return serveWasm("webp");
+      },
+    },
+
+    // Pre-bundled module worker that decodes images with the WASM codecs above.
+    "/imageWorker.js": {
+      async GET() {
+        try {
+          const code = await getWorkerCode();
+          return new Response(code, {
+            headers: {
+              "Content-Type": "text/javascript; charset=utf-8",
+              "Cache-Control":
+                process.env.NODE_ENV === "production"
+                  ? "public, max-age=31536000, immutable"
+                  : "no-store",
+            },
+          });
+        } catch (err) {
+          return Response.json(
+            { error: err instanceof Error ? err.message : "Unknown error" },
+            { status: 500 }
+          );
         }
       },
     },
