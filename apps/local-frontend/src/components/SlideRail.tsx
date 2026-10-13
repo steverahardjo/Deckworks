@@ -14,8 +14,8 @@ export function SlideRail() {
   }, [activeIndex]);
 
   return (
-    <aside className="glass flex w-48 shrink-0 flex-col border-r border-border/70">
-      <div className="flex items-center justify-between px-3.5 py-3">
+    <aside className="glass flex w-44 shrink-0 flex-col border-r border-border/70">
+      <div className="flex items-center justify-between px-3 py-2.5">
         <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           Slides
         </span>
