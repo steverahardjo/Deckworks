@@ -14,12 +14,26 @@ export type SlideDoc = {
   html: string;
 };
 
+export type Comment = {
+  id: string;
+  slideId: string;
+  message: string;
+  status: "open" | "resolved";
+  position?: { x: number; y: number };
+  imageUrl?: string;
+  link?: string;
+};
+
 type SlidesApi = {
   slides: SlideDoc[];
   activeIndex: number;
+  comments: Comment[];
   select: (index: number) => void;
   next: () => void;
   prev: () => void;
+  addComment: (comment: Comment) => void;
+  resolveComment: (commentId: string) => void;
+  resolveAllComments: () => void;
 };
 
 const SlidesContext = createContext<SlidesApi | null>(null);
@@ -27,6 +41,7 @@ const SlidesContext = createContext<SlidesApi | null>(null);
 export function SlidesProvider({ children }: { children: ReactNode }) {
   const [slides, setSlides] = useState<SlideDoc[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,6 +60,15 @@ export function SlidesProvider({ children }: { children: ReactNode }) {
     load();
     const events = new EventSource("/api/events");
     events.addEventListener("slides-changed", load);
+
+    fetch("/api/comments")
+      .then((res) =>
+        res.ok ? (res.json() as Promise<{ comments: Comment[] }>) : null
+      )
+      .then((data) => {
+        if (!cancelled && data) setComments(data.comments ?? []);
+      })
+      .catch(() => {});
 
     return () => {
       cancelled = true;
@@ -65,9 +89,36 @@ export function SlidesProvider({ children }: { children: ReactNode }) {
   const next = useCallback(() => select(activeIndex + 1), [activeIndex, select]);
   const prev = useCallback(() => select(activeIndex - 1), [activeIndex, select]);
 
+  const addComment = useCallback((comment: Comment) => {
+    setComments((prev) => {
+      if (prev.some((c) => c.id === comment.id)) return prev;
+      return [...prev, comment];
+    });
+  }, []);
+  const resolveComment = useCallback((commentId: string) => {
+    setComments((prev) =>
+      prev.map((c) => (c.id === commentId ? { ...c, status: "resolved" as const } : c))
+    );
+  }, []);
+  const resolveAllComments = useCallback(() => {
+    setComments((prev) =>
+      prev.map((c) => (c.status === "open" ? { ...c, status: "resolved" as const } : c))
+    );
+  }, []);
+
   const value = useMemo(
-    () => ({ slides, activeIndex, select, next, prev }),
-    [slides, activeIndex, select, next, prev]
+    () => ({
+      slides,
+      activeIndex,
+      comments,
+      select,
+      next,
+      prev,
+      addComment,
+      resolveComment,
+      resolveAllComments,
+    }),
+    [slides, activeIndex, comments, select, next, prev, addComment, resolveComment, resolveAllComments]
   );
 
   return (

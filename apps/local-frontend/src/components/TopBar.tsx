@@ -1,7 +1,58 @@
+import { useState } from "react";
+import { MagicWand, CircleNotch } from "@phosphor-icons/react";
+
+import { Button } from "@/components/ui/button";
 import { useSlides } from "@/state/store";
+import { captureSlide } from "@/lib/captureSlide";
+import { CommentsPanel } from "./CommentsPanel";
 
 export function TopBar() {
-  const { slides, activeIndex } = useSlides();
+  const { slides, activeIndex, comments, resolveAllComments } = useSlides();
+  const [compiling, setCompiling] = useState(false);
+  const openComments = comments.filter((c) => c.status === "open").length;
+  const activeSlide = slides[activeIndex];
+
+  const handleCompile = async () => {
+    if (compiling || openComments === 0) return;
+    setCompiling(true);
+    try {
+      // Capture every slide that has at least one open comment, once per slide.
+      const affected = slides
+        .map((slide) => ({
+          slide,
+          pins: comments
+            .filter(
+              (c) => c.slideId === slide.id && c.status === "open" && c.position
+            )
+            .map((c) => ({
+              x: c.position!.x,
+              y: c.position!.y,
+              label: c.message || "Comment",
+            })),
+        }))
+        .filter((s) => s.pins.length > 0);
+
+      const compiled = [];
+      for (const { slide, pins } of affected) {
+        const screenshot = await captureSlide({ html: slide.html, pins });
+        compiled.push({ slideId: slide.id, screenshot });
+      }
+
+      if (compiled.length > 0) {
+        const res = await fetch("/api/compile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slides: compiled }),
+        });
+        if (!res.ok) throw new Error(`Backend rejected: ${res.status}`);
+      }
+      resolveAllComments();
+    } catch (err) {
+      console.error("compile failed", err);
+    } finally {
+      setCompiling(false);
+    }
+  };
 
   return (
     <header className="glass sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b border-border/70 px-4">
@@ -23,6 +74,33 @@ export function TopBar() {
       <span className="rounded-full border border-border/70 bg-muted/60 px-2.5 py-1 font-mono text-[11px] tabular-nums text-muted-foreground">
         {slides.length > 0 ? `${activeIndex + 1} / ${slides.length}` : "no slides"}
       </span>
+
+      <Button
+        variant={openComments > 0 ? "default" : "outline"}
+        size="sm"
+        className="gap-2"
+        disabled={openComments === 0 || compiling}
+        onClick={() => void handleCompile()}
+        title={
+          openComments > 0
+            ? `Compile ${openComments} open comment${openComments === 1 ? "" : "s"}`
+            : "Add a comment to enable compiling"
+        }
+      >
+        {compiling ? (
+          <CircleNotch size={16} className="animate-spin" />
+        ) : (
+          <MagicWand size={16} />
+        )}
+        Compile
+        {openComments > 0 && (
+          <span className="rounded-full bg-background/20 px-1.5 text-xs tabular-nums">
+            {openComments}
+          </span>
+        )}
+      </Button>
+
+      {activeSlide ? <CommentsPanel slideId={activeSlide.id} /> : null}
     </header>
   );
 }

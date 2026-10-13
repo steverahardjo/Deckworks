@@ -1,4 +1,4 @@
-import { mkdir, readdir, readFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { watch } from "node:fs";
 import { serve } from "bun";
@@ -18,6 +18,46 @@ type SlideDoc = {
   index: number;
   html: string;
 };
+
+type Comment = {
+  id: string;
+  slideId: string;
+  message: string;
+  status: "open" | "resolved";
+  position?: { x: number; y: number };
+  imageUrl?: string;
+  link?: string;
+};
+
+// Comments live in a sidecar file next to tmp/ — there is no deck.json.
+const COMMENTS_FILE = join(PROJECT_DIR, "comments.json");
+
+async function readComments(): Promise<Comment[]> {
+  try {
+    const raw = await readFile(COMMENTS_FILE, "utf8");
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as Comment[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeComments(comments: Comment[]): Promise<void> {
+  await mkdir(PROJECT_DIR, { recursive: true });
+  await writeFile(COMMENTS_FILE, JSON.stringify(comments, null, 2), "utf8");
+}
+
+// Compile screenshots land next to the slide documents they annotate.
+function saveSlidePng(slideId: string, dataUrl: string): Promise<string | null> {
+  const match = /^data:image\/(png|jpeg|webp);base64,(.+)$/s.exec(dataUrl);
+  if (!match) return Promise.resolve(null);
+  const ext = match[1] === "jpeg" ? "jpg" : match[1];
+  const fileName = `${slideId}.${ext}`;
+  const filePath = join(SLIDES_DIR, fileName);
+  return mkdir(SLIDES_DIR, { recursive: true })
+    .then(() => writeFile(filePath, Buffer.from(match[2]!, "base64")))
+    .then(() => `tmp/slides/${fileName}`);
+}
 
 async function listSlides(): Promise<SlideDoc[]> {
   let entries: string[];
@@ -81,6 +121,69 @@ const server = serve({
     "/api/slides": {
       async GET() {
         return Response.json({ slides: await listSlides() });
+      },
+    },
+
+    // Comments for the feedback loop, persisted in comments.json.
+    "/api/comments": {
+      async GET() {
+        return Response.json({ comments: await readComments() });
+      },
+      async POST(req) {
+        try {
+          const body = (await req.json()) as { comment?: Comment };
+          const comment = body.comment;
+          if (!comment || !comment.slideId) {
+            return Response.json(
+              { error: "comment and slideId are required" },
+              { status: 400 }
+            );
+          }
+          const comments = await readComments();
+          comments.push({ ...comment, status: comment.status ?? "open" });
+          await writeComments(comments);
+          return Response.json({ comment }, { status: 201 });
+        } catch (err) {
+          return Response.json(
+            { error: err instanceof Error ? err.message : "Unknown error" },
+            { status: 400 }
+          );
+        }
+      },
+    },
+
+    // Compile: persist one annotated screenshot per slide and resolve every
+    // open comment, so the agent can read the images and act on them.
+    "/api/compile": {
+      async POST(req) {
+        try {
+          const body = (await req.json()) as {
+            slides?: { slideId: string; screenshot: string }[];
+          };
+          const slides = Array.isArray(body.slides) ? body.slides : [];
+          if (slides.length === 0) {
+            return Response.json({ error: "slides are required" }, { status: 400 });
+          }
+
+          const compiled = [];
+          for (const { slideId, screenshot } of slides) {
+            const savedPath = await saveSlidePng(slideId, screenshot);
+            compiled.push({ slideId, screenshot: savedPath });
+          }
+
+          const comments = await readComments();
+          for (const c of comments) {
+            if (c.status === "open") c.status = "resolved";
+          }
+          await writeComments(comments);
+
+          return Response.json({ slides: compiled }, { status: 200 });
+        } catch (err) {
+          return Response.json(
+            { error: err instanceof Error ? err.message : "Unknown error" },
+            { status: 400 }
+          );
+        }
       },
     },
 
