@@ -26,6 +26,14 @@ export function SlideRail() {
 
       <ScrollArea className="flex-1">
         <div className="flex flex-col gap-2.5 px-3 py-3">
+          {slides.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border bg-card/60 p-3 text-center">
+              <p className="text-xs font-medium text-foreground">No slides</p>
+              <p className="mt-1 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                Write slide-N.html into tmp/slides.
+              </p>
+            </div>
+          )}
           {slides.map((slide, i) => {
             const isActive = i === activeIndex;
             return (
