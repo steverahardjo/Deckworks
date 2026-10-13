@@ -181,7 +181,9 @@ The operational instructions have one source of truth:
 ```text
 backend/shared/
 ├── skills/
-│   ├── SKILL.md
+│   ├── SKILL.md          # thin router
+│   ├── build.md          # shared authoring contract
+│   ├── create.md … export.md  # per-mode subskills
 │   └── data-analysis.md
 ├── spec/
 │   ├── workflow/
