@@ -26,6 +26,7 @@ const DRAG_THRESHOLD = 4;
 
 export interface CommentBarHandle {
   openAt: (pos: { x: number; y: number }) => void;
+  close: () => void;
 }
 
 type SendStatus = "idle" | "sending" | "sent" | "error";
@@ -91,6 +92,9 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: SlideDoc }>(
         setOpen(true);
         setStatus("idle");
         setErrorMsg("");
+      },
+      close() {
+        setOpen(false);
       },
     }));
 
@@ -206,6 +210,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: SlideDoc }>(
     return (
       <div
         ref={barRef}
+        onClick={(e) => e.stopPropagation()}
         className={cn(
           "absolute z-10 flex flex-col items-end gap-2 transition-opacity",
           placed ? "opacity-100" : "opacity-0"
@@ -213,7 +218,7 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: SlideDoc }>(
         style={{ left: pos.x, top: pos.y }}
       >
         {open && (
-          <div className="w-80 rounded-lg border border-border bg-card/95 p-3 shadow-[0_24px_48px_-24px_rgba(28,25,23,0.25)] backdrop-blur-xl">
+          <div className="w-96 rounded-xl border border-border bg-card/95 p-4 shadow-[0_24px_48px_-24px_rgba(28,25,23,0.25)] backdrop-blur-xl">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-sm font-medium text-foreground">
                 Add a comment
@@ -228,13 +233,13 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: SlideDoc }>(
               </Button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-3">
               {imageUrl && (
                 <div className="relative">
                   <img
                     src={imageUrl}
                     alt="Attachment preview"
-                    className="max-h-24 w-full rounded-[4px] border border-border object-cover"
+                    className="max-h-32 w-full rounded-md border border-border object-cover"
                   />
                   <button
                     type="button"
@@ -270,11 +275,11 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: SlideDoc }>(
                   }}
                   placeholder="Add a comment…"
                   disabled={status === "sending"}
-                  className="h-8 flex-1 rounded-md border border-input bg-muted/40 px-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
+                  className="h-10 flex-1 rounded-md border border-input bg-muted/40 px-3 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
                 />
                 <Button
                   size="icon"
-                  className="size-8"
+                  className="size-10"
                   onClick={() => void send()}
                   disabled={status === "sending"}
                 >

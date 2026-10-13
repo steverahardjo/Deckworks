@@ -69,6 +69,7 @@ export function Slides() {
         {slide ? (
           <div
             ref={stageRef}
+            onClick={() => commentRef.current?.close()}
             onDoubleClick={handleSlideDoubleClick}
             className="absolute inset-0"
           >
@@ -82,7 +83,10 @@ export function Slides() {
               <button
                 key={c.id}
                 type="button"
-                onClick={(e) => handlePinClick(e.currentTarget)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePinClick(e.currentTarget);
+                }}
                 className="absolute z-10 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-primary shadow-[0_2px_8px_rgba(28,25,23,0.25)] transition-transform hover:scale-125 active:scale-95"
                 style={{
                   left: `${((c.position!.x / SLIDE_W) * 100).toFixed(3)}%`,
