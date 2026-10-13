@@ -35,7 +35,7 @@ export function ScaledFrame({
   const scale = width > 0 ? width / SLIDE_WIDTH : 0;
 
   return (
-    <div ref={ref} className={cn("overflow-hidden", className)}>
+    <div ref={ref} className={cn("overflow-hidden rounded-[inherit] bg-muted/40", className)}>
       {scale > 0 && (
         <iframe
           title="slide"
@@ -43,7 +43,7 @@ export function ScaledFrame({
           sandbox=""
           scrolling="no"
           tabIndex={-1}
-          className="pointer-events-none border-0"
+          className="pointer-events-none border-0 bg-white"
           style={{
             width: SLIDE_WIDTH,
             height: SLIDE_HEIGHT,

@@ -3,7 +3,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f7f6f3;
+  --background: #f5f4f0;
   --foreground: #1c1917;
   --card: #ffffff;
   --card-foreground: #1c1917;
@@ -11,40 +11,66 @@
   --popover-foreground: #1c1917;
   --primary: #1c1917;
   --primary-foreground: #fdfcfb;
-  --secondary: #efeee9;
+  --secondary: #edebe5;
   --secondary-foreground: #1c1917;
-  --muted: #f1f0eb;
-  --muted-foreground: #7a756c;
-  --accent: #efeee9;
+  --muted: #efede8;
+  --muted-foreground: #76716a;
+  --accent: #edebe5;
   --accent-foreground: #1c1917;
   --destructive: #9f2f2d;
   --destructive-foreground: #fdfcfb;
-  --border: #e8e6df;
-  --input: #d9d6cd;
-  --ring: #b07c33;
-  --radius: 0.5rem;
+  --border: #e4e1d8;
+  --input: #d5d1c6;
+  --ring: #a5762a;
+  --radius: 0.75rem;
 }
 
 .dark {
-  --background: #141311;
-  --foreground: #f3f1ec;
-  --card: #1d1b18;
-  --card-foreground: #f3f1ec;
-  --popover: #23211d;
-  --popover-foreground: #f3f1ec;
-  --primary: #f3f1ec;
-  --primary-foreground: #1c1917;
-  --secondary: #2a2824;
-  --secondary-foreground: #e7e4dd;
-  --muted: #23211d;
-  --muted-foreground: #a49e92;
-  --accent: #2a2824;
-  --accent-foreground: #f3f1ec;
+  --background: #0b0d11;
+  --foreground: #e9e7e1;
+  --card: #14171d;
+  --card-foreground: #e9e7e1;
+  --popover: #191d24;
+  --popover-foreground: #e9e7e1;
+  --primary: #ece9e2;
+  --primary-foreground: #131518;
+  --secondary: #1e222a;
+  --secondary-foreground: #e2e0da;
+  --muted: #171b21;
+  --muted-foreground: #9aa0aa;
+  --accent: #1e222a;
+  --accent-foreground: #e9e7e1;
   --destructive: #e5484d;
   --destructive-foreground: #fdfcfb;
-  --border: #2f2c27;
-  --input: #3b382f;
+  --border: #232833;
+  --input: #2c333e;
   --ring: #d9a75c;
+}
+
+/* Follow the OS theme with pure CSS so no JS behaviour changes are needed. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --background: #0b0d11;
+    --foreground: #e9e7e1;
+    --card: #14171d;
+    --card-foreground: #e9e7e1;
+    --popover: #191d24;
+    --popover-foreground: #e9e7e1;
+    --primary: #ece9e2;
+    --primary-foreground: #131518;
+    --secondary: #1e222a;
+    --secondary-foreground: #e2e0da;
+    --muted: #171b21;
+    --muted-foreground: #9aa0aa;
+    --accent: #1e222a;
+    --accent-foreground: #e9e7e1;
+    --destructive: #e5484d;
+    --destructive-foreground: #fdfcfb;
+    --border: #232833;
+    --input: #2c333e;
+    --ring: #d9a75c;
+  }
 }
 
 @theme inline {
@@ -97,11 +123,17 @@
   body {
     margin: 0;
     background-color: var(--background);
-    background-image: radial-gradient(
-      90rem 32rem at 50% -8rem,
-      rgba(176, 124, 51, 0.05),
-      rgba(176, 124, 51, 0) 60%
-    );
+    background-image:
+      radial-gradient(
+        90rem 32rem at 50% -8rem,
+        rgba(165, 118, 42, 0.08),
+        rgba(165, 118, 42, 0) 60%
+      ),
+      radial-gradient(
+        60rem 24rem at 85% 110%,
+        rgba(20, 184, 166, 0.06),
+        rgba(20, 184, 166, 0) 65%
+      );
     background-repeat: no-repeat;
     color: var(--foreground);
     font-family: var(--font-humanist);
@@ -109,6 +141,21 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow: hidden;
+  }
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-image:
+        radial-gradient(
+          90rem 32rem at 50% -8rem,
+          rgba(217, 167, 92, 0.1),
+          rgba(217, 167, 92, 0) 60%
+        ),
+        radial-gradient(
+          60rem 24rem at 85% 110%,
+          rgba(20, 184, 166, 0.09),
+          rgba(20, 184, 166, 0) 65%
+        );
+    }
   }
   .font-humanist {
     font-family: var(--font-humanist);
@@ -120,7 +167,72 @@
     font-family: var(--font-mono);
   }
   ::selection {
-    background: rgba(176, 124, 51, 0.2);
+    background: rgba(165, 118, 42, 0.22);
+  }
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* Selective frosted-glass surface: blur + translucency for chrome only. */
+.glass {
+  background: color-mix(in srgb, var(--card) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.2);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+}
+
+/* Live indicator pulse. */
+@keyframes live-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.live-dot {
+  position: relative;
+}
+.live-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: currentColor;
+  animation: live-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Gentle canvas entrance when the active slide changes (keyed remount). */
+@keyframes slide-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.slide-enter {
+  animation: slide-enter 420ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .slide-enter,
+  .rise-in {
+    animation: none;
+    opacity: 1;
+  }
+  .live-dot::after {
+    animation: none;
   }
 }
 
