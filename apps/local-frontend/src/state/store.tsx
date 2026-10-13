@@ -1,243 +1,82 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
-  useReducer,
-  type Dispatch,
+  useMemo,
+  useState,
   type ReactNode,
 } from "react";
 
-import type { Comment, Presentation, Preset, Slide } from "@deckworks/core";
-import { mockPresentation } from "./mockPresentation";
-import type { Material } from "./types";
-
-export type State = {
-  presentation: Presentation;
-  activeSlideId: string;
-  presets: Preset[];
-  materials: Material[];
-  activeMarkdownId: string | null;
-  selectedLook: string;
-  focus: string;
-  directive: string;
+export type SlideDoc = {
+  id: string;
+  index: number;
+  html: string;
 };
 
-export type Action =
-  | { type: "rename"; title: string }
-  | { type: "select-slide"; slideId: string }
-  | { type: "apply-preset"; presetId: string }
-  | { type: "add-comment"; comment: Comment }
-  | { type: "hydrate-comments"; comments: Comment[] }
-  | { type: "hydrate-presets"; presets: Preset[] }
-  | { type: "resolve-comment"; commentId: string }
-  | { type: "add-slide"; slide: Slide }
-  | { type: "hydrate"; presentation: Presentation }
-  | { type: "compile" }
-  | { type: "add-material"; material: Material }
-  | { type: "remove-material"; id: string }
-  | { type: "open-material"; id: string }
-  | { type: "close-material" }
-  | { type: "select-look"; presetId: string }
-  | { type: "set-focus"; focus: string }
-  | { type: "set-directive"; directive: string }
-  | { type: "set-slide-notes"; slideId: string; notes: string }
-  | { type: "build" };
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case "rename":
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          metadata: { ...state.presentation.metadata, title: action.title },
-        },
-      };
-    case "select-slide":
-      return { ...state, activeSlideId: action.slideId };
-    case "apply-preset": {
-      const preset = state.presets.find((p) => p.id === action.presetId);
-      if (!preset) return state;
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          theme: preset.theme,
-          template: preset.id,
-        },
-      };
-    }
-    case "add-comment":
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          comments: [...state.presentation.comments, action.comment],
-        },
-      };
-    case "hydrate-comments": {
-      const existing = new Set(state.presentation.comments.map((c) => c.id));
-      const fresh = action.comments.filter((c) => !existing.has(c.id));
-      if (!fresh.length) return state;
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          comments: [...state.presentation.comments, ...fresh],
-        },
-      };
-    }
-    case "hydrate-presets":
-      return { ...state, presets: action.presets };
-    case "resolve-comment":
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          comments: state.presentation.comments.map((c) =>
-            c.id === action.commentId ? { ...c, status: "resolved" as const } : c
-          ),
-        },
-      };
-    case "add-slide":
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          slides: [...state.presentation.slides, action.slide],
-        },
-      };
-    case "hydrate":
-      return {
-        ...state,
-        presentation: action.presentation,
-        activeSlideId: action.presentation.slides[0]?.id ?? state.activeSlideId,
-        selectedLook: action.presentation.template,
-      };
-    case "compile": {
-      const hasOpen = state.presentation.comments.some((c) => c.status === "open");
-      if (!hasOpen) return state;
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          comments: state.presentation.comments.map((c) =>
-            c.status === "open" ? { ...c, status: "resolved" as const } : c
-          ),
-        },
-      };
-    }
-    case "add-material":
-      return { ...state, materials: [...state.materials, action.material] };
-    case "remove-material":
-      return {
-        ...state,
-        materials: state.materials.filter((m) => m.id !== action.id),
-        activeMarkdownId:
-          state.activeMarkdownId === action.id ? null : state.activeMarkdownId,
-      };
-    case "open-material":
-      return { ...state, activeMarkdownId: action.id };
-    case "close-material":
-      return { ...state, activeMarkdownId: null };
-    case "select-look":
-      return { ...state, selectedLook: action.presetId };
-    case "set-focus":
-      return { ...state, focus: action.focus };
-    case "set-directive":
-      return { ...state, directive: action.directive };
-    case "set-slide-notes":
-      return {
-        ...state,
-        presentation: {
-          ...state.presentation,
-          slides: state.presentation.slides.map((slide) =>
-            slide.id === action.slideId ? { ...slide, notes: action.notes } : slide
-          ),
-        },
-      };
-    case "build": {
-      const preset = state.presets.find((p) => p.id === state.selectedLook);
-      const note = state.materials.find(
-        (material) => material.kind === "md" && material.name.toLowerCase() === "note.md"
-      );
-      return preset
-        ? {
-            ...state,
-            activeMarkdownId: note?.id ?? state.activeMarkdownId,
-            presentation: { ...state.presentation, theme: preset.theme, template: preset.id },
-          }
-        : state;
-    }
-  }
-}
-
-const initialState: State = {
-  presentation: mockPresentation,
-  activeSlideId: mockPresentation.slides[0]?.id ?? "slide-01",
-  presets: [],
-  materials: [],
-  activeMarkdownId: null,
-  selectedLook: "consulting",
-  focus: "",
-  directive: "",
+type SlidesApi = {
+  slides: SlideDoc[];
+  activeIndex: number;
+  select: (index: number) => void;
+  next: () => void;
+  prev: () => void;
 };
 
-const StateContext = createContext<State | null>(null);
-const DispatchContext = createContext<Dispatch<Action> | null>(null);
+const SlidesContext = createContext<SlidesApi | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, initialState);
+export function SlidesProvider({ children }: { children: ReactNode }) {
+  const [slides, setSlides] = useState<SlideDoc[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/presentation")
-      .then((res) =>
-        res.ok ? (res.json() as Promise<{ presentation: Presentation }>) : null
-      )
-      .then((data) => {
-        if (cancelled || !data?.presentation?.slides?.length) return;
-        dispatch({ type: "hydrate", presentation: data.presentation });
-      })
-      .catch(() => {});
+
+    const load = () => {
+      fetch("/api/slides")
+        .then((res) =>
+          res.ok ? (res.json() as Promise<{ slides: SlideDoc[] }>) : null
+        )
+        .then((data) => {
+          if (!cancelled && data) setSlides(data.slides ?? []);
+        })
+        .catch(() => {});
+    };
+
+    load();
+    const events = new EventSource("/api/events");
+    events.addEventListener("slides-changed", load);
+
     return () => {
       cancelled = true;
+      events.close();
     };
   }, []);
 
+  // Keep the active slide in range as documents appear and disappear.
   useEffect(() => {
-    let cancelled = false;
-    fetch("/api/presets")
-      .then((res) =>
-        res.ok ? (res.json() as Promise<{ presets: Preset[] }>) : null
-      )
-      .then((data) => {
-        if (cancelled || !data?.presets?.length) return;
-        dispatch({ type: "hydrate-presets", presets: data.presets });
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    setActiveIndex((i) => Math.min(i, Math.max(0, slides.length - 1)));
+  }, [slides.length]);
+
+  const select = useCallback(
+    (index: number) =>
+      setActiveIndex(Math.max(0, Math.min(index, slides.length - 1))),
+    [slides.length]
+  );
+  const next = useCallback(() => select(activeIndex + 1), [activeIndex, select]);
+  const prev = useCallback(() => select(activeIndex - 1), [activeIndex, select]);
+
+  const value = useMemo(
+    () => ({ slides, activeIndex, select, next, prev }),
+    [slides, activeIndex, select, next, prev]
+  );
 
   return (
-    <StateContext.Provider value={state}>
-      <DispatchContext.Provider value={dispatch}>
-        {children}
-      </DispatchContext.Provider>
-    </StateContext.Provider>
+    <SlidesContext.Provider value={value}>{children}</SlidesContext.Provider>
   );
 }
 
-export function useAppState(): State {
-  const ctx = useContext(StateContext);
-  if (!ctx) throw new Error("useAppState must be used within AppProvider");
-  return ctx;
-}
-
-export function useAppDispatch(): Dispatch<Action> {
-  const ctx = useContext(DispatchContext);
-  if (!ctx) throw new Error("useAppDispatch must be used within AppProvider");
+export function useSlides(): SlidesApi {
+  const ctx = useContext(SlidesContext);
+  if (!ctx) throw new Error("useSlides must be used within SlidesProvider");
   return ctx;
 }

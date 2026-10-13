@@ -1,9 +1,13 @@
-import { RouterProvider } from "react-router-dom";
-import { router } from "./router";
 import "./index.css";
+import { SlidesProvider } from "./state/store";
+import { EditorShell } from "./components/EditorShell";
 
 export function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <SlidesProvider>
+      <EditorShell />
+    </SlidesProvider>
+  );
 }
 
 export default App;
