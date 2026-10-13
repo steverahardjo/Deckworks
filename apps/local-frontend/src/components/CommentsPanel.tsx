@@ -6,8 +6,8 @@ import {
   CheckCircle,
 } from "@phosphor-icons/react";
 
-import { Button } from "@/components/ui/button";
-import { useSlides, type Comment } from "@/state/store";
+import { Button } from "./ui/button";
+import { useSlides, type Comment } from "../state/store";
 
 export function CommentsPanel({ slideId }: { slideId: string }) {
   const { comments: allComments, resolveComment } = useSlides();

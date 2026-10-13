@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 
-import { useSlides } from "@/state/store";
+import { useSlides } from "../state/store";
 import { ScaledFrame } from "./ScaledFrame";
 import { CommentBar, type CommentBarHandle } from "./CommentBar";
-import { SLIDE_W, SLIDE_H } from "@/lib/captureSlide";
+import { SLIDE_W, SLIDE_H } from "../lib/captureSlide";
 
 export function Slides() {
   const { slides, activeIndex, comments, next, prev } = useSlides();

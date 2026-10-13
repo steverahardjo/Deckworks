@@ -16,10 +16,10 @@ import {
   WarningCircle,
 } from "@phosphor-icons/react";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useSlides, type Comment, type SlideDoc } from "@/state/store";
-import { SLIDE_W, SLIDE_H } from "@/lib/captureSlide";
+import { Button } from "./ui/button";
+import { cn } from "../lib/utils";
+import { useSlides, type Comment, type SlideDoc } from "../state/store";
+import { SLIDE_W, SLIDE_H } from "../lib/captureSlide";
 
 
 const DRAG_THRESHOLD = 4;

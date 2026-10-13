@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
-import { useSlides } from "@/state/store";
+import { ScrollArea } from "./ui/scroll-area";
+import { cn } from "../lib/utils";
+import { useSlides } from "../state/store";
 import { ScaledFrame } from "./ScaledFrame";
 
 export function SlideRail() {

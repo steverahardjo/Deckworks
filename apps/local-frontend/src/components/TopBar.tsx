@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { MagicWand, CircleNotch } from "@phosphor-icons/react";
 
-import { Button } from "@/components/ui/button";
-import { useSlides } from "@/state/store";
-import { captureSlide } from "@/lib/captureSlide";
+import { Button } from "./ui/button";
+import { useSlides } from "../state/store";
+import { captureSlide } from "../lib/captureSlide";
 import { CommentsPanel } from "./CommentsPanel";
 
 export function TopBar() {

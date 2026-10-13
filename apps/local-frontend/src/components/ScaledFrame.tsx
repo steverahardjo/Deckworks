@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "../lib/utils";
 
 const SLIDE_WIDTH = 1280;
 const SLIDE_HEIGHT = 720;
