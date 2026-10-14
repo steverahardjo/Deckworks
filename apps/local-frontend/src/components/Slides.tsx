@@ -6,7 +6,7 @@ import { CommentBar, type CommentBarHandle } from "./CommentBar";
 import { SLIDE_W, SLIDE_H } from "../lib/captureSlide";
 
 export function Slides() {
-  const { slides, activeIndex, comments, next, prev } = useSlides();
+  const { slides, activeIndex, comments, presenting, next, prev } = useSlides();
   const slide = slides[activeIndex];
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -20,6 +20,7 @@ export function Slides() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      if (presenting) return;
       if (e.key === "ArrowDown" || e.key === "ArrowRight" || e.key === "PageDown") {
         e.preventDefault();
         next();
@@ -30,7 +31,7 @@ export function Slides() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev]);
+  }, [next, prev, presenting]);
 
   const handleSlideDoubleClick = (e: React.MouseEvent) => {
     const stage = stageRef.current;

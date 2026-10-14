@@ -28,12 +28,15 @@ type SlidesApi = {
   slides: SlideDoc[];
   activeIndex: number;
   comments: Comment[];
+  presenting: boolean;
   select: (index: number) => void;
   next: () => void;
   prev: () => void;
   addComment: (comment: Comment) => void;
   resolveComment: (commentId: string) => void;
   resolveAllComments: () => void;
+  enterPresent: () => void;
+  exitPresent: () => void;
 };
 
 const SlidesContext = createContext<SlidesApi | null>(null);
@@ -42,6 +45,7 @@ export function SlidesProvider({ children }: { children: ReactNode }) {
   const [slides, setSlides] = useState<SlideDoc[]>([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [comments, setComments] = useState<Comment[]>([]);
+  const [presenting, setPresenting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,19 +110,25 @@ export function SlidesProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
+  const enterPresent = useCallback(() => setPresenting(true), []);
+  const exitPresent = useCallback(() => setPresenting(false), []);
+
   const value = useMemo(
     () => ({
       slides,
       activeIndex,
       comments,
+      presenting,
       select,
       next,
       prev,
       addComment,
       resolveComment,
       resolveAllComments,
+      enterPresent,
+      exitPresent,
     }),
-    [slides, activeIndex, comments, select, next, prev, addComment, resolveComment, resolveAllComments]
+    [slides, activeIndex, comments, presenting, select, next, prev, addComment, resolveComment, resolveAllComments, enterPresent, exitPresent]
   );
 
   return (
