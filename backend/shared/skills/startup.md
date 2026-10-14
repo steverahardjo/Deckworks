@@ -17,9 +17,10 @@ customer evidence as required assets; do not invent traction.
 
 ## Structure
 
-Component choice and layout come from the selected look. Keep speaker notes for
-talk track and objections, and record metric definitions and time windows in
-`scratchpad.md`.
+Prefer `title`, `body`, `chart`, `image`, and a restrained `callout`. Choose the
+`startup` look when the user has not supplied a different visual direction. Keep
+speaker notes for talk track and objections, and record metric definitions and
+time windows in `scratchpad.md`.
 
 ## Implement
 

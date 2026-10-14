@@ -8,25 +8,6 @@ description: Shared authoring contract for writing deck.json slides, the deck-wi
 Load this subskill when a mode writes or changes slides. It is the shared
 implementation contract; the routed subskill owns narrative, evidence, and gates.
 
-## Content
-
-Write for the back of the room, then stop. The look spec sets the density
-ceiling; these rules apply to every look.
-
-* **One idea per slide.** The title states the claim; the body proves it. If a
-  slide needs two ideas, split it.
-* **Bold the one thing worth remembering** — the number, the claim, the named
-  result — with `**bold**`. Use it once or twice per slide, never for whole
-  sentences, and never as decoration. Slide text also accepts `*italic*`,
-  `` `code` ``, and `[links](url)`.
-* **Prefer structure over prose.** Turn comparisons into a `table`, a sequence
-  into a timeline, and a relationship into a diagram before writing another
-  paragraph.
-* **Use SVG for anything shaped.** Charts, timelines, pointers, and diagrams are
-  one renderer-safe inline SVG (via `properties.svg`), not a wall of text or a
-  stack of boxes. Give the SVG real labels and units, and let the look's accent
-  carry the emphasis.
-
 ## Stylesheet
 
 Write the deck-wide stylesheet from the selected look spec: its palette, type
@@ -79,34 +60,11 @@ record the command and output paths in `scratchpad.md`:
 
 ```python
 # tmp/render_slides.py — derived output; deck.json stays the source of truth
-import html, json, pathlib, re
+import html, json, pathlib
 
 deck = json.loads(pathlib.Path("deck.json").read_text())
 css = deck.get("stylesheet") or pathlib.Path("tmp/slide.css").read_text()
 out = pathlib.Path("tmp/slides"); out.mkdir(parents=True, exist_ok=True)
-
-# Inline Markdown for slide text: bold, italic, code, links. Everything else is
-# escaped, so the output is safe. Keep this in step with the deck renderer.
-_INLINE = re.compile(r"(`[^`]+`|\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_|\[[^\]]+\]\([^)]+\))")
-
-def inline_md(text):
-    parts, last = [], 0
-    for m in _INLINE.finditer(text):
-        parts.append(html.escape(text[last:m.start()]))
-        t = m.group(0)
-        if t.startswith("`"):
-            parts.append(f"<code>{html.escape(t[1:-1])}</code>")
-        elif t.startswith(("**", "__")):
-            parts.append(f"<strong>{inline_md(t[2:-2])}</strong>")
-        elif t.startswith(("*", "_")):
-            parts.append(f"<em>{inline_md(t[1:-1])}</em>")
-        else:
-            label, _, url = t[1:-1].partition("](")
-            parts.append(f'<a href="{html.escape(url, quote=True)}" target="_blank" '
-                         f'rel="noreferrer">{inline_md(label)}</a>')
-        last = m.end()
-    parts.append(html.escape(text[last:]))
-    return "".join(parts)
 
 def element_html(el):
     pos, size = el["position"], el["size"]
@@ -118,7 +76,7 @@ def element_html(el):
     elif el["type"] == "image" and props.get("src"):
         inner = f'<img src="{html.escape(props["src"], quote=True)}"/>'
     else:
-        inner = inline_md(str(props.get("text", "")))
+        inner = html.escape(str(props.get("text", "")))
     return f'<div class="slide-el slide-{el["type"]}" style="{style}">{inner}</div>'
 
 for i, slide in enumerate(deck["slides"], 1):

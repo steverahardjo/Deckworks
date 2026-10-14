@@ -1,7 +1,6 @@
 import { readFileSync } from "node:fs";
 import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import { inlineMarkdownToHtml } from "@deckworks/core";
 import type { Element, Presentation, Slide, Theme } from "@deckworks/core";
 
 /**
@@ -337,14 +336,14 @@ function elementHtml(el: Element): string {
     case "title":
     case "subtitle":
     case "table":
-      return `<div class="${cls}" style="${base}">${inlineMarkdownToHtml(text)}</div>`;
+      return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
     case "body":
       if (el.properties.variant === "sources") {
         return structuredSourcesBodyHtml(el, base, cls);
       }
-      return `<div class="${cls}" style="${base}">${inlineMarkdownToHtml(text)}</div>`;
+      return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
     case "callout":
-      return `<div class="${cls}" style="${base}">${inlineMarkdownToHtml(text)}</div>`;
+      return `<div class="${cls}" style="${base}">${escapeHtml(text)}</div>`;
     case "divider":
     case "shape":
       return `<div class="${cls}" style="${base}"></div>`;
@@ -358,7 +357,7 @@ function elementHtml(el: Element): string {
     }
     case "chart": {
       if (svg) return `<div class="${cls}" style="${base}">${svg}</div>`;
-      return `<div class="${cls}" style="${base}">${inlineMarkdownToHtml(text || "Chart")}</div>`;
+      return `<div class="${cls}" style="${base}">${escapeHtml(text || "Chart")}</div>`;
     }
     default:
       return "";
@@ -391,13 +390,13 @@ function structuredSourcesBodyHtml(
   const pointHtml = points
     .map(
       (point) =>
-        `<div class="slide-source-point"><span class="slide-source-point__mark" aria-hidden="true"></span><span><span class="slide-source-point__label">${inlineMarkdownToHtml(point.label)}</span><span class="slide-source-point__text">${inlineMarkdownToHtml(point.text)}</span></span></div>`
+        `<div class="slide-source-point"><span class="slide-source-point__mark" aria-hidden="true"></span><span><span class="slide-source-point__label">${escapeHtml(point.label)}</span><span class="slide-source-point__text">${escapeHtml(point.text)}</span></span></div>`
     )
     .join("");
   const definitionHtml = definitions
     .map(
       (definition) =>
-        `<div class="slide-definition"><span class="slide-definition__label">${inlineMarkdownToHtml(definition.label)}</span><span class="slide-definition__text">${inlineMarkdownToHtml(definition.text)}</span></div>`
+        `<div class="slide-definition"><span class="slide-definition__label">${escapeHtml(definition.label)}</span><span class="slide-definition__text">${escapeHtml(definition.text)}</span></div>`
     )
     .join("");
 
@@ -405,7 +404,7 @@ function structuredSourcesBodyHtml(
     <div class="slide-sources__eyebrow">Sources</div>
     <div class="slide-sources__points">${pointHtml}</div>
     <div class="slide-sources__definitions"><div class="slide-sources__eyebrow">Definitions</div>${definitionHtml}</div>
-    <div class="slide-sources__disclaimer">${inlineMarkdownToHtml(disclaimer)}</div>
+    <div class="slide-sources__disclaimer">${escapeHtml(disclaimer)}</div>
   </div>`;
 }
 

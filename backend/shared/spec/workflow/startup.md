@@ -3,10 +3,15 @@
 Use for pitches, product updates, launch narratives, investor updates, and
 metric-led operating reviews.
 
-Lead the narrative gate with the change, the customer problem, or the traction
-signal. Treat real metrics, logos, and customer evidence as required assets; do
-not invent traction. Pair with the `startup` look unless the user supplies a
-different visual direction.
+Lead with the change, the customer problem, or the traction signal. Use short
+claims, one memorable metric per slide, and a clear progression from insight
+to product or strategy to proof to ask. Treat real metrics, logos, screenshots,
+and customer evidence as required assets; do not invent traction.
 
-The operating method lives in `skills/startup.md`; the universal contract and
-gate sequence are in `backend/shared/skills/SKILL.md`.
+Prefer `title`, `body`, `chart`, `image`, and a restrained `callout`. Choose
+the `startup` look when the user has not supplied a different visual direction.
+Keep speaker notes for talk track and objections, and record metric definitions
+and time windows in `scratchpad.md`.
+
+Follow `backend/shared/skills/SKILL.md` for approvals, implementation, review,
+and export.
