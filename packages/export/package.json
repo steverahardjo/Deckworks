@@ -1,0 +1,30 @@
+{
+  "name": "@deckworks/export",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./html": {
+      "types": "./src/exportHtml.ts",
+      "default": "./src/exportHtml.ts"
+    },
+    "./pdf": {
+      "types": "./src/exportPdf.tsx",
+      "default": "./src/exportPdf.tsx"
+    },
+    "./ops": {
+      "types": "./src/ops.ts",
+      "default": "./src/ops.ts"
+    }
+  },
+  "dependencies": {
+    "@deckworks/core": "workspace:*",
+    "@react-pdf/renderer": "^4.6.1",
+    "cheerio": "^1.2.0",
+    "pptxgenjs": "^4.0.1"
+  }
+}
