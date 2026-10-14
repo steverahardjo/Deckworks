@@ -14,7 +14,7 @@ export function SlideRail() {
   }, [activeIndex]);
 
   return (
-    <aside className="glass flex w-44 shrink-0 flex-col border-r border-border/70">
+    <aside className="glass flex w-32 shrink-0 flex-col border-r border-border/70">
       <div className="flex items-center justify-between px-3 py-2.5">
         <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
           Slides
@@ -25,7 +25,7 @@ export function SlideRail() {
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="flex flex-col gap-2.5 px-3 py-3">
+        <div className="flex flex-col gap-2 px-2 py-2">
           {slides.length === 0 && (
             <div className="rounded-xl border border-dashed border-border bg-card/60 p-3 text-center">
               <p className="text-xs font-medium text-foreground">No slides</p>
@@ -42,7 +42,7 @@ export function SlideRail() {
                 ref={isActive ? activeRef : undefined}
                 onClick={() => select(i)}
                 className={cn(
-                  "group flex flex-col gap-1.5 rounded-xl border bg-card p-1.5 text-left transition-all duration-200 hover:-translate-y-px hover:shadow-md active:scale-[0.98]",
+                  "group flex flex-col gap-1 rounded-lg border bg-card p-1 text-left transition-all duration-200 hover:-translate-y-px hover:shadow-md active:scale-[0.98]",
                   isActive
                     ? "border-ring/60 shadow-lg ring-2 ring-ring/25"
                     : "border-border/70 shadow-sm hover:border-ring/40"
