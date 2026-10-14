@@ -1,10 +1,17 @@
 import type { CSSProperties } from "react";
 
+import { inlineMarkdownToHtml } from "@deckworks/core";
 import type { Element, Slide } from "@deckworks/core";
 import { useAppState } from "@/state/store";
 import "../../../../backend/shared/sandbox/slide.css";
 
 type SourcePoint = { label: string; text: string };
+
+// Slide text carries the inline Markdown subset (bold, italic, code, links).
+// The helper escapes everything else, so injecting it here is safe.
+function richText(value: string): { dangerouslySetInnerHTML: { __html: string } } {
+  return { dangerouslySetInnerHTML: { __html: inlineMarkdownToHtml(value) } };
+}
 
 function sourcePoints(value: unknown): SourcePoint[] {
   if (!Array.isArray(value)) return [];
@@ -31,8 +38,8 @@ function StructuredSourcesBody({ properties }: { properties: Record<string, unkn
           <div className="slide-source-point" key={point.label}>
             <span className="slide-source-point__mark" aria-hidden="true" />
             <span>
-              <span className="slide-source-point__label">{point.label}</span>
-              <span className="slide-source-point__text">{point.text}</span>
+              <span className="slide-source-point__label" {...richText(point.label)} />
+              <span className="slide-source-point__text" {...richText(point.text)} />
             </span>
           </div>
         ))}
@@ -41,12 +48,12 @@ function StructuredSourcesBody({ properties }: { properties: Record<string, unkn
         <div className="slide-sources__eyebrow">Definitions</div>
         {definitions.map((definition) => (
           <div className="slide-definition" key={definition.label}>
-            <span className="slide-definition__label">{definition.label}</span>
-            <span className="slide-definition__text">{definition.text}</span>
+            <span className="slide-definition__label" {...richText(definition.label)} />
+            <span className="slide-definition__text" {...richText(definition.text)} />
           </div>
         ))}
       </div>
-      <div className="slide-sources__disclaimer">{disclaimer}</div>
+      <div className="slide-sources__disclaimer" {...richText(disclaimer)} />
     </>
   );
 }
@@ -132,7 +139,7 @@ function SlideElement({ element, debug }: { element: Element; debug?: boolean })
     case "subtitle":
     case "table":
     case "callout":
-      content = <div className={className} style={style}>{text}</div>;
+      content = <div className={className} style={style} {...richText(text)} />;
       break;
     case "body":
       content = element.properties.variant === "sources" ? (
@@ -140,7 +147,7 @@ function SlideElement({ element, debug }: { element: Element; debug?: boolean })
           <StructuredSourcesBody properties={element.properties} />
         </div>
       ) : (
-        <div className={className} style={style}>{text}</div>
+        <div className={className} style={style} {...richText(text)} />
       );
       break;
     case "divider":
@@ -151,7 +158,7 @@ function SlideElement({ element, debug }: { element: Element; debug?: boolean })
       content = svg ? (
         <div className={className} style={style} dangerouslySetInnerHTML={{ __html: svg }} />
       ) : (
-        <div className={className} style={style}>{text || "Chart"}</div>
+        <div className={className} style={style} {...richText(text || "Chart")} />
       );
       break;
     case "image": {

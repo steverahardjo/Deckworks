@@ -1,6 +1,7 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DeckworksApp } from "@deckworks/core/store";
+import { stripInlineMarkdown } from "@deckworks/core";
 import type { Element, Presentation } from "@deckworks/core";
 import { TYPE_SCALE } from "@deckworks/export/html";
 
@@ -35,13 +36,13 @@ interface Finding {
 }
 
 function wordCount(text: string): number {
-  return text.trim().split(/\s+/).filter(Boolean).length;
+  return stripInlineMarkdown(text).trim().split(/\s+/).filter(Boolean).length;
 }
 
 function estimateTextHeight(el: Element): number | null {
   if (!isTextType(el.type)) return null;
   const scale = TYPE_SCALE[el.type];
-  const text = String(el.properties?.text ?? "");
+  const text = stripInlineMarkdown(String(el.properties?.text ?? ""));
   const lineHeightPx = scale.fontSize * scale.lineHeight;
   const charsPerLine = Math.max(
     1,
