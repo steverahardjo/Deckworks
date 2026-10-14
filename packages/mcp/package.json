@@ -1,0 +1,15 @@
+{
+  "name": "@deckworks/mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "deckworks-mcp": "./src/index.ts"
+  },
+  "dependencies": {
+    "@deckworks/core": "workspace:*",
+    "@deckworks/export": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^4.4.3"
+  }
+}
