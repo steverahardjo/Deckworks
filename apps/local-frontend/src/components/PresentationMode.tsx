@@ -1,12 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CaretLeft, CaretRight, X } from "@phosphor-icons/react";
 
 import { useSlides } from "../state/store";
+import { cn } from "../lib/utils";
 import { ScaledFrame } from "./ScaledFrame";
+
+const IDLE_MS = 2500;
 
 export function PresentationMode() {
   const { slides, activeIndex, select, next, prev, exitPresent } = useSlides();
   const slide = slides[activeIndex];
+  const [idle, setIdle] = useState(false);
+  const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Take over the screen. The browser reserves Esc to leave fullscreen without
   // notifying the page's key handler, so fullscreenchange is the source of
@@ -55,14 +60,44 @@ export function PresentationMode() {
     return () => window.removeEventListener("keydown", onKey);
   }, [next, prev, exitPresent]);
 
+  // Hide the chrome (and cursor) while the audience watches; any movement
+  // brings it back.
+  useEffect(() => {
+    const wake = () => {
+      setIdle(false);
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+      idleTimer.current = setTimeout(() => setIdle(true), IDLE_MS);
+    };
+    wake();
+    window.addEventListener("mousemove", wake);
+    window.addEventListener("mousedown", wake);
+    window.addEventListener("touchstart", wake);
+    window.addEventListener("keydown", wake);
+    return () => {
+      window.removeEventListener("mousemove", wake);
+      window.removeEventListener("mousedown", wake);
+      window.removeEventListener("touchstart", wake);
+      window.removeEventListener("keydown", wake);
+      if (idleTimer.current) clearTimeout(idleTimer.current);
+    };
+  }, []);
+
+  const chrome = cn(
+    "transition-opacity duration-300",
+    idle && "pointer-events-none opacity-0"
+  );
+
   return (
     <div
       role="dialog"
       aria-label="Presentation mode"
       onClick={() => next()}
-      className="fixed inset-0 z-50 flex flex-col bg-black/[0.97] text-white"
+      className={cn(
+        "fade-in fixed inset-0 z-50 flex flex-col bg-black/[0.97] text-white",
+        idle && "cursor-none"
+      )}
     >
-      <div className="flex shrink-0 items-center justify-between px-5 py-3">
+      <div className={cn("flex shrink-0 items-center justify-between px-5 py-3", chrome)}>
         <span className="font-mono text-xs tabular-nums text-white/60">
           {slides.length > 0 ? `${activeIndex + 1} / ${slides.length}` : "no slides"}
         </span>
@@ -90,7 +125,10 @@ export function PresentationMode() {
             prev();
           }}
           title="Previous slide"
-          className="absolute left-4 top-1/2 -translate-y-1/2 rounded-lg border border-white/15 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          className={cn(
+            "absolute left-4 top-1/2 -translate-y-1/2 rounded-lg border border-white/15 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white",
+            chrome
+          )}
         >
           <CaretLeft size={18} />
         </button>
@@ -107,7 +145,7 @@ export function PresentationMode() {
             <ScaledFrame
               key={slide.id}
               html={slide.html}
-              className="slide-enter absolute inset-0"
+              className="absolute inset-0"
             />
           </div>
         ) : (
@@ -121,13 +159,16 @@ export function PresentationMode() {
             next();
           }}
           title="Next slide"
-          className="absolute right-4 top-1/2 -translate-y-1/2 rounded-lg border border-white/15 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+          className={cn(
+            "absolute right-4 top-1/2 -translate-y-1/2 rounded-lg border border-white/15 bg-white/5 p-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white",
+            chrome
+          )}
         >
           <CaretRight size={18} />
         </button>
       </div>
 
-      <div className="flex shrink-0 items-center justify-center gap-1.5 pb-4">
+      <div className={cn("flex shrink-0 items-center justify-center gap-1.5 pb-4", chrome)}>
         {slides.map((s, i) => (
           <button
             key={s.id}
