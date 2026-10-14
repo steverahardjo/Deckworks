@@ -261,8 +261,9 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: SlideDoc }>(
               )}
 
               <div className="flex gap-2">
-                <input
+                <textarea
                   value={message}
+                  rows={3}
                   onChange={(e) => {
                     setMessage(e.target.value);
                     if (status !== "idle") {
@@ -271,11 +272,14 @@ export const CommentBar = forwardRef<CommentBarHandle, { slide: SlideDoc }>(
                     }
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") void send();
+                    if (e.key === "Enter" && (e.shiftKey || e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      void send();
+                    }
                   }}
-                  placeholder="Add a comment…"
+                  placeholder="Add a comment… (Shift+Enter to send)"
                   disabled={status === "sending"}
-                  className="h-10 flex-1 rounded-md border border-input bg-muted/40 px-3 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
+                  className="min-h-10 flex-1 resize-y rounded-md border border-input bg-muted/40 px-3 py-2 text-[15px] text-foreground placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60"
                 />
                 <Button
                   size="icon"
