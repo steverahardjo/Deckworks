@@ -13,8 +13,9 @@
     "build": "bun run apps/local-frontend/build.ts",
     "start": "NODE_ENV=production bun apps/local-frontend/index.ts",
     "build:remote": "bun run apps/remote-frontend/build.ts",
+    "build:preview": "bun scripts/build-preview.ts",
     "mcp": "bun packages/mcp/src/index.ts",
-    "install:mcp": "bun scripts/install-mcp.ts"
+    "setup": "bun scripts/setup.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist-mono": "^5.3.0",
@@ -43,8 +44,10 @@
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
+    "@clack/prompts": "^1.8.1",
     "@types/bun": "latest",
     "@types/react": "^19",
-    "@types/react-dom": "^19"
+    "@types/react-dom": "^19",
+    "comment-json": "^5.0.0"
   }
 }

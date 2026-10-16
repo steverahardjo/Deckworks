@@ -117,6 +117,13 @@ const server = serve({
     // Serve index.html for all unmatched routes.
     "/*": index,
 
+    // Liveness probe: a deterministic 200 the MCP uses to detect readiness.
+    "/api/hello": {
+      GET() {
+        return Response.json({ ok: true, name: "deckworks-preview" });
+      },
+    },
+
     // Every slide document, in order, so the preview can render them.
     "/api/slides": {
       async GET() {

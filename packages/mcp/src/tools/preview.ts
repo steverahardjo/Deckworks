@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -30,26 +32,50 @@ function repoRoot(): string {
   return process.env.DECKWORKS_ROOT ?? join(import.meta.dir, "..", "..", "..", "..");
 }
 
-/** Start the local frontend server detached; returns its pid. */
-function startFrontendServer(port: number, projectDir: string): number {
-  const root = repoRoot();
-  const proc = Bun.spawn(
-    ["bun", "--hot", join(root, "apps", "local-frontend", "index.ts")],
-    {
-      cwd: root,
-      env: {
-        ...process.env,
-        DECKWORKS_PORT: String(port),
-        PORT: String(port),
-        DECKWORK_PROJECT_DIR: projectDir,
-      },
-      stdin: "ignore",
-      stdout: "ignore",
-      stderr: "ignore",
-    }
+/** The compiled preview binary, if it has been installed by `bun run setup`. */
+function previewBin(): string {
+  return (
+    process.env.DECKWORKS_PREVIEW_BIN ??
+    join(homedir(), ".local", "bin", "deckworks-preview")
   );
+}
+
+/**
+ * Start the preview server detached; returns its pid and how it was started.
+ * Prefers the compiled preview binary; falls back to the source server with
+ * Bun hot-reload for development.
+ */
+function startFrontendServer(
+  port: number,
+  projectDir: string
+): { pid: number; binary: boolean } {
+  const env = {
+    ...process.env,
+    DECKWORKS_PORT: String(port),
+    PORT: String(port),
+    DECKWORK_PROJECT_DIR: projectDir,
+  };
+
+  const bin = previewBin();
+  const binary = existsSync(bin);
+  const proc = binary
+    ? Bun.spawn([bin], {
+        cwd: projectDir,
+        env,
+        stdin: "ignore",
+        stdout: "ignore",
+        stderr: "ignore",
+      })
+    : Bun.spawn(["bun", "--hot", join(repoRoot(), "apps", "local-frontend", "index.ts")], {
+        cwd: repoRoot(),
+        env,
+        stdin: "ignore",
+        stdout: "ignore",
+        stderr: "ignore",
+      });
+
   proc.unref();
-  return proc.pid;
+  return { pid: proc.pid, binary };
 }
 
 export function registerPreviewTools(server: McpServer, app: DeckworksApp) {
@@ -57,7 +83,7 @@ export function registerPreviewTools(server: McpServer, app: DeckworksApp) {
     "run_preview",
     {
       description:
-        "Run the local Deckworks frontend (Bun) for the active project — starting it if it is not already listening — and open http://localhost:<port>/slides in the default browser.",
+        "Run the local Deckworks preview for the active project — starting it if it is not already listening — and open http://localhost:<port>/slides in the default browser. Uses the compiled preview binary installed by `bun run setup`, falling back to the source server.",
       inputSchema: {
         port: z
           .number()
@@ -78,9 +104,12 @@ export function registerPreviewTools(server: McpServer, app: DeckworksApp) {
 
         const running = await isServerUp(port);
         let pid: number | null = null;
+        let binary = false;
         let ready = running;
         if (!running) {
-          pid = startFrontendServer(port, projectDir);
+          const started = startFrontendServer(port, projectDir);
+          pid = started.pid;
+          binary = started.binary;
           ready = await waitForServer(port, 15000);
         }
 
@@ -91,13 +120,14 @@ export function registerPreviewTools(server: McpServer, app: DeckworksApp) {
           url,
           opened,
           startedServer: !running,
+          binary,
           ready,
           pid,
           hint: !ready
-            ? "Frontend did not respond within 15s. Run `bun install` in the repository root and try again."
+            ? "Preview did not respond within 15s. Run `bun run setup` in the repository root and try again."
             : opened
-              ? "Frontend running; preview opened at /slides."
-              : "Frontend running, but no browser opener was found. Open the URL manually.",
+              ? "Preview running; opened at /slides."
+              : "Preview running, but no browser opener was found. Open the URL manually.",
         };
       })
   );
