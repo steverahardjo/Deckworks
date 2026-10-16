@@ -37,7 +37,7 @@ tmp/slides/*.html ◀── live preview (Bun)
 Requires [Bun](https://bun.sh) 1.3+.
 
 ```bash
-git clone <repo> deckworks
+git clone https://github.com/steverahardjo/Deckworks.git deckworks
 cd deckworks
 bun install
 bun run install:mcp
