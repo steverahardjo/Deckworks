@@ -5,10 +5,10 @@ Deckworks exposes its whole presentation workflow to coding agents over the
 primary interface for agents such as Claude Code, OpenCode, and Codex — the web
 editor is the human-facing half of the same workflow.
 
-An agent authors `deck.json` directly with its own file tools, then uses the
-MCP to load runtime knowledge (schema, skills, specs, looks), check the deck for
-layout problems, run the live preview, and export to HTML, PDF, and PPTX — all
-without touching a browser.
+An agent authors each slide as a self-contained HTML file under `tmp/slides`
+with its own file tools, then uses the MCP to load runtime knowledge (skills,
+specs, looks), check the deck, run the live preview, read human feedback, and
+export to HTML, PDF, and PPTX — all without touching a browser.
 
 ## Requirements
 
@@ -24,6 +24,11 @@ bun /absolute/path/to/deckworks/packages/mcp/src/index.ts
 ```
 
 It speaks MCP over **stdio** and nothing else — no port, no URL.
+
+The simplest way to wire it into your editors is `bun run setup` from the
+repository (see the [README](../../README.md)): it builds the preview binary,
+writes per-client config (global or repo-scoped), probes the server, and starts
+the preview. The command below is for adding a client manually.
 
 The server resolves its skills and specs relative to its own file, not the
 process working directory, so it behaves identically no matter where your agent
@@ -159,40 +164,42 @@ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":
 
 ## Tools
 
-14 tools. The server is deliberately small: writing and editing `deck.json` is
-the agent's job (use your own file tools); the MCP resolves runtime knowledge,
-checks the result, runs the preview, and exports.
+15 tools. The server is deliberately small: authoring the slide files is the
+agent's job (use your own file tools); the MCP resolves runtime knowledge,
+checks the result, runs the preview, reads human feedback, and exports.
 
 | Stage | Tools |
 | --- | --- |
 | Lifecycle | `deck_open` · `deck_status` |
 | Knowledge | `deck_get_schema` · `deck_get_instructions` · `deck_list_specs` · `deck_list_skills` · `deck_load_skill` · `deck_list_workflows` · `deck_load_workflow` · `deck_list_looks` · `deck_load_look` |
 | Check & preview | `deck_review` · `run_preview` |
+| Feedback | `deck_feedback` |
 | Output | `deck_export` |
 
-`deck_review`, `run_preview` and `deck_export` accept an optional `path`; when
-omitted they act on the project made active by `deck_open`. The checker always
-re-reads `deck.json` from disk, so it reflects edits made with your own file
-tools.
+`deck_review`, `run_preview`, `deck_feedback` and `deck_export` accept an
+optional `path`; when omitted they act on the project made active by
+`deck_open`. Feedback is read fresh from `comments.json` and the compiled
+screenshots under `tmp/slides/`.
 
 ## The workflow to expect
 
 The server is deliberately workflow-oriented rather than raw CRUD. A competent
 agent run looks like this:
 
-1. `deck_open` — make a project active (`deck.json` is the source of truth).
+1. `deck_open` — make a project active.
 2. `deck_list_skills` → `deck_load_skill` — load `SKILL.md` (and
    `data-analysis.md` only when analysis is needed).
 3. `deck_list_workflows` → `deck_load_workflow`, then `deck_list_looks` →
    `deck_load_look` — select the operating mode and design system **before**
    writing slides.
-4. Author `deck.json` with your own file tools — build the deck by writing
-   slides and elements with stable ids.
-5. `deck_review` — check geometry, overflow, overlap, unsupported elements, and
-   density against the look spec, then fix the JSON and re-check.
-6. `run_preview` — start the local frontend and open
+4. Author `tmp/slides/slide-N.html` with your own file tools.
+5. `deck_review` — check geometry, density, and look compliance, then fix and
+   re-check.
+6. `run_preview` — start the preview and open
    `http://localhost:<port>/slides` in a browser.
-7. `deck_export` — `html`, `pdf`, or `pptx`.
+7. `deck_feedback` — after a human comments and compiles, read their comments
+   and annotated screenshots.
+8. `deck_export` — `html`, `pdf`, or `pptx`.
 
 ### Skills and looks are files, not code
 
@@ -207,14 +214,13 @@ it without touching TypeScript:
 `deck_review` measures a deck's body copy against the density ceiling in the
 loaded look spec, so the specs are enforced rather than merely advisory.
 
-### Renderer limits you should know
+### Rendering
 
-Only **`title`, `subtitle`, `body` and `chart`** elements render. `image`,
-`shape`, `table`, `divider` and `callout` are accepted by the schema and stored
-in `deck.json`, but produce no output in preview, export, or compiled
-screenshots. `deck_review` reports these as findings. Typography is fixed by the
-renderer (54/28/20px), so the eleven looks currently differ only by palette.
-See `backend/shared/spec/README.md` for details.
+Slides are rendered verbatim — the frontend injects nothing. Each
+`tmp/slides/slide-N.html` carries its own inline `<style>`, so typography and
+layout are the agent's. If a slide needs exact fonts it inlines `@font-face`.
+The look specs define the palette, type scale, grid, and density to follow; see
+`backend/shared/spec/README.md`.
 
 ## Relocated or bundled installs
 
@@ -267,5 +273,5 @@ bun run mcp        # start the server from the repository root
 
 The server implementation lives in `packages/mcp/src/`:
 `index.ts` registers the tool groups, `tools/lifecycle.ts`, `knowledge.ts`,
-`review.ts`, `preview.ts`, and `output.ts`, with `tools/assets.ts` resolving
-the shared skill and spec directories.
+`review.ts`, `preview.ts`, `feedback.ts`, and `output.ts`, with
+`tools/assets.ts` resolving the shared skill and spec directories.

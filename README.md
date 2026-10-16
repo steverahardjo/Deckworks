@@ -40,12 +40,13 @@ Requires [Bun](https://bun.sh) 1.3+.
 git clone https://github.com/steverahardjo/Deckworks.git deckworks
 cd deckworks
 bun install
-bun run install:mcp
+bun run setup
 ```
 
-`install:mcp` writes this machine's client config (`opencode.json` and
-`.mcp.json`) and probes the server. Per-client setup for Claude Code, OpenCode,
-Codex, Cursor, and others is in
+`setup` compiles the preview frontend into a standalone binary, detects your
+MCP clients (opencode, Claude Code, Codex, Cursor, Claude Desktop), asks whether
+to latch each one **globally** or for **this repository only**, probes the
+server, and starts the live preview. Per-client details are in
 [`packages/mcp/README.md`](packages/mcp/README.md).
 
 ## Quickstart

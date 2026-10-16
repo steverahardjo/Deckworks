@@ -10,7 +10,9 @@ human feedback, and export.
 
 Per-client setup (Claude Code, OpenCode, Codex, Cursor, and any other MCP
 client) is in [`packages/mcp/README.md`](../packages/mcp/README.md). For local
-setup, run `bun run install:mcp` (see the [README](../README.md)).
+setup, run `bun run setup` — it builds the preview binary, latches your chosen
+clients (global or repo-scoped), probes the server, and starts the preview (see
+the [README](../README.md)).
 
 ## Tools
 
@@ -32,8 +34,8 @@ optional `path`; when omitted they act on the project made active by
   wrote into `tmp/slides/`, with each screenshot as a viewable image. Because
   Compile resolves the comments it captures, resolved comments are included by
   default — that is the feedback to act on.
-- **`run_preview`** starts the local Bun preview for the project and opens it in
-  the browser.
+- **`run_preview`** starts the compiled preview binary for the project and opens
+  it in the browser (falling back to the source server in development).
 - **`deck_export`** writes `html`, `pdf`, or `pptx` into the project.
 
 The exact tool schema may evolve, but the conceptual workflow should remain
@@ -49,7 +51,7 @@ stable.
    slides.
 4. Author `tmp/slides/slide-N.html` with your own file tools.
 5. `deck_review` — check geometry, density, and look compliance.
-6. `run_preview` — start the frontend and open `http://localhost:<port>/slides`.
+6. `run_preview` — start the preview and open `http://localhost:<port>/slides`.
 7. `deck_feedback` — after a human comments and compiles, read their comments
    and annotated screenshots.
 8. `deck_export` — `html`, `pdf`, or `pptx`.
