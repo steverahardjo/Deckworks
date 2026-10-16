@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "deckworks": {
+      "command": "/home/holyknight101/.bun/bin/bun",
+      "args": [
+        "/home/holyknight101/Documents/Projects/Personal/Deckworks/packages/mcp/src/index.ts"
+      ]
+    }
+  }
+}

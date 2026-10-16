@@ -3,14 +3,11 @@
   "mcp": {
     "deckworks": {
       "type": "local",
-      "command": ["/home/holyknight101/Documents/Projects/Personal/Deckworks/dist/deckworks-mcp"],
-      "enabled": true,
-      "environment": {
-        "DECKWORKS_SKILLS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/backend/shared/skills",
-        "DECKWORKS_SPEC_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/backend/shared/spec",
-        "DECKWORKS_FONTS_DIR": "/home/holyknight101/Documents/Projects/Personal/Deckworks/packages/export/assets/fonts",
-        "DECKWORKS_ROOT": "/home/holyknight101/Documents/Projects/Personal/Deckworks"
-      }
+      "command": [
+        "/home/holyknight101/.bun/bin/bun",
+        "/home/holyknight101/Documents/Projects/Personal/Deckworks/packages/mcp/src/index.ts"
+      ],
+      "enabled": true
     }
   }
 }

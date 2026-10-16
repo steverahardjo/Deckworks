@@ -13,7 +13,8 @@
     "build": "bun run apps/local-frontend/build.ts",
     "start": "NODE_ENV=production bun apps/local-frontend/index.ts",
     "build:remote": "bun run apps/remote-frontend/build.ts",
-    "mcp": "bun packages/mcp/src/index.ts"
+    "mcp": "bun packages/mcp/src/index.ts",
+    "install:mcp": "bun scripts/install-mcp.ts"
   },
   "dependencies": {
     "@fontsource-variable/geist-mono": "^5.3.0",
