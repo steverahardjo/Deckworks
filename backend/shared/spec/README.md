@@ -48,20 +48,17 @@ Each look spec must document:
 - renderer compatibility boundaries, including treatment of equations or other specialist notation;
 - dynamic composition patterns such as points, pointers, timelines, and
   diagrams, including the supported element primitives used to build them.
-- a short copyable HTML snippet for the recommended composition; snippets use
-  the element classes the renderer emits.
+- a short copyable, self-contained HTML snippet for the recommended composition.
 
 The header table is machine-read: both backends parse `spec/look/*.md` into the
 preset list they serve, so adding a Markdown file adds a look. There is no
 separate presets file; the look catalog order comes from `look/README.md`.
 
-Each look spec is the agent's brief for the deck-wide stylesheet it writes into
-the deck's `stylesheet` field. The renderer emits semantic element classes
-(`.slide-surface`, `.slide-el`, `.slide-<type>`) and publishes each element's box
-as `--slide-x/y/w/h` custom properties, so the stylesheet owns layout and the
-look spec owns the grid, type scale, palette roles, density, and component
-treatments. `backend/shared/sandbox/slide.css` is the bundled fallback used when
-the deck has no agent-authored stylesheet.
+Each look spec is the agent's brief for the inline styles it writes into every
+self-contained slide file (`tmp/slides/slide-N.html`). The look spec owns the
+grid, type scale, palette roles, density, and component treatments, and the agent
+applies them consistently across the deck. `backend/shared/sandbox/slide.css` is
+the bundled fallback stylesheet available for reference and preview.
 
 ## Runtime selection
 

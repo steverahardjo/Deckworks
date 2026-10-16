@@ -7,7 +7,7 @@ route to. The MCP discovers every Markdown file here at runtime.
 | Skill | File | Purpose |
 | --- | --- | --- |
 | `SKILL` | `SKILL.md` | Thin router: route one workflow, load one look, apply the universal contract. |
-| `build` | `build.md` | Shared authoring contract: stylesheet, layout, implementation sequence, Python slide-HTML rule. |
+| `build` | `build.md` | Shared authoring contract: self-contained slide files, layout, implementation sequence, chart-generation rule. |
 | `create` | `create.md` | Build a new narrative and draft with a narrative approval gate. |
 | `edit` | `edit.md` | Make a focused change to an existing deck. |
 | `review` | `review.md` | Inspect layout, density, assets, and rendering issues. |

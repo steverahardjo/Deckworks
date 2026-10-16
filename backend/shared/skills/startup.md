@@ -25,4 +25,4 @@ time windows in `scratchpad.md`.
 ## Implement
 
 Follow the `create` gate structure, then load the `build` subskill for the
-stylesheet, layout, and Python slide-HTML rules.
+slide-file, layout, and chart-generation rules.

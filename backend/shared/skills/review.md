@@ -7,7 +7,7 @@ description: Inspect a deck for layout, density, asset, rendering, and look-comp
 
 Use when the user asks for a critique, QA, readiness check, or "what is wrong".
 
-1. Read `deck.json` and run `deck_review`.
+1. Read the slide files in `tmp/slides/` and run `deck_review`.
 2. Optionally `run_preview` to confirm rendering in the browser.
 3. Report findings as `slideId > elementId > problem > fix`, ordered by severity.
 4. Separate defects (fix required) from judgment calls (options offered), and

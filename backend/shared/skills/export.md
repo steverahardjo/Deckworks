@@ -7,7 +7,7 @@ description: Validate a finished deck and produce an HTML, PDF, or PowerPoint ar
 
 Use when the user wants HTML, PDF, or PowerPoint output.
 
-1. Confirm the saved `deck.json` matches the approved deliverable.
+1. Confirm the saved slide files match the approved deliverable.
 2. Run `deck_review` and resolve any errors before exporting.
 3. Run `deck_export {format}` with `html`, `pdf`, or `pptx`.
 4. Confirm the returned path and byte size, and that the exported slide count

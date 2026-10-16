@@ -1,6 +1,6 @@
 ---
 name: deckworks-build
-description: Shared authoring contract for writing deck.json slides, the deck-wide stylesheet, and Python-rendered slide HTML.
+description: Shared authoring contract for writing self-contained slide HTML files and their inline styles.
 ---
 
 # Deckworks build
@@ -8,88 +8,57 @@ description: Shared authoring contract for writing deck.json slides, the deck-wi
 Load this subskill when a mode writes or changes slides. It is the shared
 implementation contract; the routed subskill owns narrative, evidence, and gates.
 
-## Stylesheet
+## Slide files
 
-Write the deck-wide stylesheet from the selected look spec: its palette, type
-scale, grid, density ceiling, and component treatments. `deck_export`, the
-editor, and every slide render with that stylesheet instead of the bundled
-`sandbox/slide.css`.
+Every slide is one self-contained HTML file in `tmp/slides/`, named
+`slide-N.html` and ordered by the numeric `N`. Each file carries everything it
+needs to render on its own: its markup, its inline `<style>`, and any inline SVG
+or embedded asset. There is no central deck file and no separate stylesheet.
 
-* Styling is deck-wide, not slide-specific; all slides share one stylesheet.
-* The renderer publishes each element's model box as `--slide-x/y/w/h` custom
-  properties and its content as `.slide-<type>` classes, so layout is yours to
-  define.
-* Cover the element classes you use and keep the five theme variables
-  (`--slide-bg`, `--slide-fg`, `--slide-muted`, `--slide-accent`,
-  `--slide-font`) as the colour/interaction source.
-* Fix content and component selection before rewriting the stylesheet.
+* Author the slide files directly with your own file tools; do not derive them
+  from a central deck file.
+* Keep styling deck-wide in spirit — one palette, type scale, grid, and density
+  ceiling across all slides — even though each file carries its own `<style>`.
+* Keep the five theme variables (`--slide-bg`, `--slide-fg`, `--slide-muted`,
+  `--slide-accent`, `--slide-font`) as the colour/interaction source.
 * Prefer reusable layout classes over per-slide overrides.
+* Fix content and component selection before rewriting styles.
 
 ## Implementation sequence
 
-1. Read `deck.json` — inspect current pages and stable ids.
-2. Set the deck's `theme` and `template` to the selected look.
-3. Write the deck-wide `stylesheet` field (or `tmp/slide.css`) from the look spec.
-4. Add or revise slides and elements directly in `deck.json`.
-5. `deck_review` — inspect geometry, density, support, and look compliance.
-6. Record each creation or edit run in `scratchpad.md`.
-7. `run_preview` — open the live editor at `http://localhost:<port>/slides`.
-
-Follow the schema exposed by `deck_get_schema` rather than guessing fields.
+1. Read `tmp/slides/*.html` — inspect current slides and their stable ids.
+2. Apply the selected look consistently to every slide's inline styles.
+3. Write or revise each slide directly in `tmp/slides/slide-N.html`.
+4. `deck_review` — inspect geometry, density, support, and look compliance.
+5. Record each creation or edit run and its progress in `scratchpad.md`.
+6. `run_preview` — open the live editor at `http://localhost:<port>/slides`.
 
 ## Layout constraints
 
-* Give every element explicit `position` and `size` values.
-* Keep all geometry inside the canvas and the look's safe area.
+* Keep all geometry inside the 1280 × 720 canvas and the look's safe area.
+* Give every element explicit position and size in its inline styles.
 * Use stable semantic ids such as `title`, `body`, `figure-1`, `citation-1`.
 * Preserve readable spacing between titles, evidence, interpretation, citations.
 * Use the look's grid and density ceiling instead of a universal template.
 * Keep speaker notes separate from visible slide content.
 
-For diagrams and dynamic compositions, use supported `shape`, `divider`,
-`callout`, `chart`, and `image` elements or one renderer-safe inline SVG. Supply
-inline SVG through `properties.svg` and raster or URL assets through
-`properties.src`. The device must clarify the claim; do not add arrows, nodes, or
-motion-like marks as ornament.
+For diagrams and dynamic compositions, use CSS, inline SVG, or embedded images
+directly in the slide file. The device must clarify the claim; do not add arrows,
+nodes, or motion-like marks as ornament.
 
-## Rendered slide HTML is generated with Python
+## Charts and data-driven assets
 
-Never hand-author or hand-edit slide HTML. Generate it with a deterministic
-Python script that reads `deck.json` and the resolved stylesheet, then run it and
-record the command and output paths in `scratchpad.md`:
+Hand-author the slide markup, but generate charts and other data-driven assets
+with a deterministic Python script. Run the script, then inline or reference its
+output in the slide file, and record the command and output paths in
+`scratchpad.md`:
 
 ```python
-# tmp/render_slides.py — derived output; deck.json stays the source of truth
-import html, json, pathlib
+# tmp/render_chart.py — derived output; slide HTML stays the source of truth
+import pathlib
 
-deck = json.loads(pathlib.Path("deck.json").read_text())
-css = deck.get("stylesheet") or pathlib.Path("tmp/slide.css").read_text()
-out = pathlib.Path("tmp/slides"); out.mkdir(parents=True, exist_ok=True)
-
-def element_html(el):
-    pos, size = el["position"], el["size"]
-    style = (f'--slide-x:{pos["x"]}px;--slide-y:{pos["y"]}px;'
-             f'--slide-w:{size["width"]}px;--slide-h:{size["height"]}px;')
-    props = el.get("properties", {})
-    if el["type"] in {"image", "chart"} and props.get("svg"):
-        inner = props["svg"].strip()
-    elif el["type"] == "image" and props.get("src"):
-        inner = f'<img src="{html.escape(props["src"], quote=True)}"/>'
-    else:
-        inner = html.escape(str(props.get("text", "")))
-    return f'<div class="slide-el slide-{el["type"]}" style="{style}">{inner}</div>'
-
-for i, slide in enumerate(deck["slides"], 1):
-    body = "".join(element_html(e) for e in slide["elements"])
-    (out / f"slide-{i}.html").write_text(
-        '<!doctype html><html><head><meta charset="utf-8">'
-        f"<style>{css}</style></head><body>"
-        f'<section class="slide" data-slide="{slide["id"]}">'
-        f'<div class="slide-surface">{body}</div></section></body></html>'
-    )
+pathlib.Path("tmp/chart.svg").write_text(build_chart())
 ```
-
-Regenerate after every change; never edit generated HTML by hand.
 
 ## Validate before completion
 
@@ -99,9 +68,9 @@ Regenerate after every change; never edit generated HTML by hand.
 * The look is consistent across the deck.
 * Elements remain inside the canvas without overlap or overflow.
 * Text, figures, equations, tables, and speaker notes remain legible.
-* Only supported components and properties are present.
+* Only supported markup and assets are present.
 * Comments and disclosed caveats have the intended status.
-* The saved deck matches the preview and requested deliverable.
+* The saved slides match the preview and requested deliverable.
 
 Resolve material defects before delivery; disclose anything that cannot be
 verified or corrected.

@@ -17,8 +17,8 @@ on a screen rather than printed.
 
 ## Palette usage
 
-- **Background** — `#0b0f1a` throughout. Never place a light panel on top; the
-  renderer has no container primitive.
+- **Background** — `#0b0f1a` throughout. Never place a light panel on top; keep
+  to the single background surface.
 - **Foreground** — titles. Near-white on near-black is the strongest contrast
   in any look; do not also use it for body.
 - **Accent** — the focus of the slide. One per slide maximum.
