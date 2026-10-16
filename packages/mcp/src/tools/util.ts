@@ -1,4 +1,4 @@
-import { readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
@@ -38,6 +38,67 @@ export async function readDeck(projectDir: string): Promise<Presentation> {
     throw new Error("deck.json is missing a slides array.");
   }
   return parsed;
+}
+
+/** A comment as the local frontend persists it in `<project>/comments.json`. */
+export interface SidecarComment {
+  id: string;
+  slideId: string;
+  message: string;
+  status: "open" | "resolved";
+  position?: { x: number; y: number };
+  imageUrl?: string;
+  link?: string;
+}
+
+const SLIDE_FILE_RE = /^slide-(\d+)\.html$/;
+const SCREENSHOT_EXTS = ["png", "jpg", "jpeg", "webp"] as const;
+
+/** Read the sidecar feedback file the local frontend writes. Missing = none. */
+export async function readComments(projectDir: string): Promise<SidecarComment[]> {
+  try {
+    const raw = await readFile(join(projectDir, "comments.json"), "utf8");
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? (parsed as SidecarComment[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** List the self-contained slide documents under `<project>/tmp/slides`. */
+export async function listSlideFiles(
+  projectDir: string
+): Promise<{ id: string; index: number }[]> {
+  let entries: string[];
+  try {
+    entries = await readdir(join(projectDir, "tmp", "slides"));
+  } catch {
+    return [];
+  }
+  return entries
+    .filter((name) => SLIDE_FILE_RE.test(name))
+    .map((name) => ({
+      id: name.replace(/\.html$/, ""),
+      index: Number(SLIDE_FILE_RE.exec(name)![1]),
+    }))
+    .sort((a, b) => a.index - b.index);
+}
+
+/** Find a compiled annotated screenshot for a slide, by any image extension. */
+export async function findScreenshot(
+  projectDir: string,
+  slideId: string
+): Promise<{ path: string; mimeType: string } | null> {
+  for (const ext of SCREENSHOT_EXTS) {
+    const path = join(projectDir, "tmp", "slides", `${slideId}.${ext}`);
+    try {
+      await access(path);
+      return { path, mimeType: ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg" };
+    } catch {
+      // try the next extension
+    }
+  }
+  return null;
 }
 
 /**

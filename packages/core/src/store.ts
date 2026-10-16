@@ -117,9 +117,14 @@ export class DeckworksApp {
   async open(path: string): Promise<void> {
     const dir = resolve(path);
     this.dir = dir;
-    const raw = await readFile(join(dir, DECK_FILE), "utf8");
-    const parsed = JSON.parse(raw) as Presentation;
-    this.presentation = { ...parsed, workflow: parsed.workflow ?? DEFAULT_WORKFLOW };
+    // The deck may live as self-contained slide files under tmp/slides with no
+    // deck.json. Fall back to a default presentation so the project is still
+    // active for the preview and feedback tools, without writing deck.json.
+    const existing = await this.tryRead();
+    this.presentation = existing
+      ? { ...existing, workflow: existing.workflow ?? DEFAULT_WORKFLOW }
+      : createPresentation();
+    await mkdir(dir, { recursive: true });
     await ensureProjectWorkspace(dir, this.presentation.template, this.presentation.workflow);
   }
 

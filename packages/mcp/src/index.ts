@@ -6,6 +6,7 @@ import { registerLifecycleTools } from "./tools/lifecycle.js";
 import { registerKnowledgeTools } from "./tools/knowledge.js";
 import { registerReviewTools } from "./tools/review.js";
 import { registerPreviewTools } from "./tools/preview.js";
+import { registerFeedbackTools } from "./tools/feedback.js";
 import { registerOutputTools } from "./tools/output.js";
 
 const app = new DeckworksApp();
@@ -16,6 +17,7 @@ registerLifecycleTools(server, app);
 registerKnowledgeTools(server, app);
 registerReviewTools(server, app);
 registerPreviewTools(server, app);
+registerFeedbackTools(server, app);
 registerOutputTools(server, app);
 
 const transport = new StdioServerTransport();

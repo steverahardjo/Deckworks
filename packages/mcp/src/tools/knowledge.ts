@@ -134,9 +134,10 @@ const PRESENTATION_SCHEMA = {
 
 const INSTRUCTIONS =
   "Load backend/shared/skills/SKILL.md first. Route exactly one workflow, then load that " +
-  "workflow from /spec/workflow and one look from /spec/look. Author deck.json with your own " +
-  "file tools — this server only reads the project and runs checks (deck_review), previews " +
-  "(run_preview) and exports (deck_export). deck.json remains the source of truth.";
+  "workflow from /spec/workflow and one look from /spec/look. Author each slide as a " +
+  "self-contained HTML file under tmp/slides with your own file tools — this server only " +
+  "reads the project and runs checks (deck_review), previews (run_preview), reads human " +
+  "feedback left in the preview (deck_feedback) and exports (deck_export).";
 
 export function registerKnowledgeTools(server: McpServer, app: DeckworksApp) {
   server.registerTool(
